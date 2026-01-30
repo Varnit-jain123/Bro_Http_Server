@@ -439,22 +439,11 @@ class Request
         }
         
     }
-    map<string,string> varMap; // this will be changed later on
+
     public:
-    void set(string name,string value) // changed later on
+    void set(string name,string value)
     {
-        varMap.insert({name,value}); // map.insert(pair<string,string>(name,value)); 
-    }
-    bool contains(string name) // changed later on
-    {
-        return varMap.find(name)!=varMap.end();
-    }
-    string get(string name) // changed later on
-    {
-        string data="";
-        auto a=varMap.find(name);
-        if(a==varMap.end()) return string("");
-        return a->second; 
+        // done done later
     }
     void forwardTo(string _forwardTo)
     {
@@ -687,7 +676,7 @@ class TemplateEngine
         int toRead;
         char buffer[513];
         long fileLength;
-        f=fopen(chtmlFileName,"rb");
+        f=fopen(chtmlFileName,"r");
         if(f==NULL)
         {
            // code to send back 404 error
@@ -836,71 +825,6 @@ class TemplateEngine
             createVMDFile(chtmlFileName,pathToVMDFile.c_str());
         }
         // process the chtml file (pick up info from VMD file)
-        FILE *chtmlFile=fopen(chtmlFileName,"rb");
-        FILE *vmdFile=fopen(pathToVMDFile.c_str(),"rb");
-        fseek(chtmlFile,0,SEEK_END);
-        long fileLength=ftell(chtmlFile);
-        rewind(chtmlFile);  
-        long responseSize=fileLength;
-        string data;
-        struct vmd vmdRecord;
-        while(1)
-        {
-            fread(&vmdRecord,sizeof(struct vmd),1,vmdFile);
-            if(feof(vmdFile)) break;
-            responseSize=responseSize-((vmdRecord.end_position-vmdRecord.start_position)+1);
-            data=request.get(vmdRecord.var_name);
-            responseSize=responseSize+data.length();
-        }
-        cout<<"Response size is : "<<responseSize<<endl;
-        string mimeType;
-        mimeType=string("text/html");
-        char header[200];
-        sprintf(header,"HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %ld\r\nConnection: close\r\n\r\n",mimeType.c_str(),responseSize);
-        send(clientSocketDescriptor,header,strlen(header),0);
-        long bytesLeftToRead;
-        int bytesToRead;
-        char buffer[4096];
-        bytesLeftToRead=fileLength;
-        rewind(vmdFile);
-        long tmpBytesLeftToRead;
-        long bytesProcessedFromFile=0;
-        while(1)
-        {
-            fread(&vmdRecord,sizeof(struct vmd),1,vmdFile);
-            if(feof(vmdFile)) break;
-            tmpBytesLeftToRead=vmdRecord.start_position-bytesProcessedFromFile;
-            bytesToRead=4096;
-            while(tmpBytesLeftToRead>0)
-            {
-                if(tmpBytesLeftToRead<bytesToRead) bytesToRead=tmpBytesLeftToRead;
-                fread(buffer,bytesToRead,1,chtmlFile);
-                if(feof(chtmlFile)) break; // this won't happen on our case
-                bytesProcessedFromFile+=bytesToRead;
-                send(clientSocketDescriptor,buffer,bytesToRead,0);
-                tmpBytesLeftToRead=tmpBytesLeftToRead-bytesToRead;
-            }
-            fread(buffer,(vmdRecord.end_position-vmdRecord.start_position)+1,1,chtmlFile);
-            bytesProcessedFromFile+=(vmdRecord.end_position-vmdRecord.start_position)+1;
-            string data;
-            if(request.contains(vmdRecord.var_name))
-            {
-                data=request.get(vmdRecord.var_name);
-                send(clientSocketDescriptor,data.c_str(),data.length(),0);
-            }
-        }
-        bytesLeftToRead-=bytesProcessedFromFile;
-        bytesToRead=4096;
-        while(bytesLeftToRead>0)
-        {
-            if(bytesLeftToRead<bytesToRead) bytesToRead=bytesLeftToRead;
-            fread(buffer,bytesToRead,1,chtmlFile);
-            if(feof(chtmlFile)) break; // this won't happen on our case 
-            send(clientSocketDescriptor,buffer,bytesToRead,0);
-            bytesLeftToRead=bytesLeftToRead-bytesToRead;
-        }
-        fclose(chtmlFile);
-        fclose(vmdFile);
     }
 };
 
@@ -1300,7 +1224,7 @@ class Bro
                     {
                         if(isCHTML(forwardTo.c_str()))
                         {
-                            request.forwardTo(string(""));
+                            Request request(method,forwardTo.c_str(),httpVersion,dataInRequest);
                             processCHTMLResource(clientSocketDiscriptor,forwardTo.c_str(),request);
                         }
                         else if(!serveStaticResource(clientSocketDiscriptor,forwardTo.c_str()))
@@ -1565,10 +1489,7 @@ int main()
                 slogan+=line;
             }
             iFile.close();
-            cout<<"size of slogan of the day is : "<<slogan.length()<<endl;
             request.set("sloganOfTheDay",slogan);
-            request.set("city1","indore");
-            request.set("city2","goa");
             _forward_(request,string("/WordsOfWisdom.chtml"));   
         });
 

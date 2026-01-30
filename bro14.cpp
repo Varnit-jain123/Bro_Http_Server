@@ -7,8 +7,6 @@
 #include<string.h>
 #include<unistd.h>
 #include<sys/stat.h>
-#include <filesystem>
-
 #ifdef _WIN32
     const char *PATH_SEPARATOR="\\";
     #include<windows.h>
@@ -246,7 +244,7 @@ class FileSystemUtility
     public:
     static bool createDirectory(const char *directoryName)
     {
-        return filesystem::create_directory(directoryName);
+        return (filesystem::create_directory(directoryName)==0);
     }
     static unsigned int getLastUpdatedTime(const char *fileName)
     {
@@ -375,9 +373,9 @@ class Request
     map<string,string> dataMap;
     string _forwardTo;
     char *method;
-    const char *requestURI;
+    char *requestURI;
     char *httpVersion;
-    Request(char *method,const char *requestURI,char *httpVersion,char *dataInRequest)
+    Request(char *method,char *requestURI,char *httpVersion,char *dataInRequest)
     {
         this->method=method;
         this->requestURI=requestURI;
@@ -439,22 +437,11 @@ class Request
         }
         
     }
-    map<string,string> varMap; // this will be changed later on
+
     public:
-    void set(string name,string value) // changed later on
+    void set(string name,string value)
     {
-        varMap.insert({name,value}); // map.insert(pair<string,string>(name,value)); 
-    }
-    bool contains(string name) // changed later on
-    {
-        return varMap.find(name)!=varMap.end();
-    }
-    string get(string name) // changed later on
-    {
-        string data="";
-        auto a=varMap.find(name);
-        if(a==varMap.end()) return string("");
-        return a->second; 
+
     }
     void forwardTo(string _forwardTo)
     {
@@ -650,27 +637,9 @@ class StartupFunctionComparator
 class TemplateEngine
 {
     private:
-    struct vmd
-    {
-        long start_position;
-        long end_position;
-        char var_name[256];
-    };
     static void createVMDFileName(const char *chtmlFileName,char *vmdFileName)
     {
         char *dotPtr;
-        const char *ptr;
-        ptr=chtmlFileName;
-        while(*ptr!='\0') ptr++;
-        while(ptr>=chtmlFileName)
-        {
-            if(*ptr=='/')
-            {
-                chtmlFileName=ptr+1;
-                break;
-            }
-            ptr--;
-        }
         for(;*chtmlFileName!='\0';chtmlFileName++,vmdFileName++)
         {
             if(*chtmlFileName=='.') dotPtr=vmdFileName;
@@ -679,131 +648,13 @@ class TemplateEngine
         *vmdFileName='\0';
         strcpy(dotPtr+1,"vmd");
     }
-    static void createVMDFile(const char *chtmlFileName,const char *pathToVMDFile)
+    static void createVMDFileAndProcessCHTMLFile(const char * chtmlFileName,const char * pathToVMDFile)
     {
-        char *start,*end,*ptr;
-        unsigned int x;
-        FILE *f;
-        int toRead;
-        char buffer[513];
-        long fileLength;
-        f=fopen(chtmlFileName,"rb");
-        if(f==NULL)
-        {
-           // code to send back 404 error
-           return;
-        }
-        FILE *vmdFile;
-        vmdFile=fopen(pathToVMDFile,"wb");
-        if(vmdFile==NULL)
-        {
 
-            // code to send back 500 internal server error page
-            fclose(f);
-            return ;
-        }
-        fseek(f,0,SEEK_END);
-        fileLength=ftell(f);
-        // cout<<fileLength<<endl;
-        rewind(f);
-        unsigned int sp,ep;
-        int ii;
-        x=0;
-        struct vmd vmd_record;
-        while(1)
-        {
-            if((fileLength-x)>256) toRead=256;
-            else toRead=fileLength-x;
-            // cout<<"Reading : "<<toRead<<" number of bytes"<<endl;
-            fread(buffer,toRead,1,f);
-            buffer[toRead]='\0';
-            x+=toRead;
-            // printf("%s",buffer);
-            // processing the contents of the buffer starts here
-            start=buffer;
-            while(1)
-            {
-                start=strstr(start,"${");
-                if(start==NULL)
-                {
-                    if(x==fileLength) break;
-                    if(buffer[toRead-1]=='$')
-                    {
-                        buffer[0]='$';
-                        if((fileLength-x)>255) toRead=255;
-                        else toRead=fileLength-x;
-                        fread(buffer+1,toRead,1,f);
-                        x+=toRead;
-                        buffer[1+toRead]='\0';
-                        start=buffer;
-                        continue;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-                end=strstr(start+2,"}");
-                if(end!=NULL)
-                {
-                    // printf("-------------------------\n");
-                    for(ptr=start+1;ptr<end;ptr++) if(*ptr=='$' && *(ptr+1)=='{') break;
-                    if(*ptr=='$') start=ptr;
-                    // write vmd record to the file starts here
-                    for(ptr=start+2,ii=0;ptr<end;ptr++,ii++)
-                    {
-                        vmd_record.var_name[ii]=*ptr;
-                    }
-                    vmd_record.var_name[ii]='\0';
-                    sp=(x-toRead)+(start-buffer);
-                    ep=(x-toRead)+(end-buffer);
-                    cout<<"1--->"<<sp<<","<<ep<<endl;
-                    vmd_record.start_position=sp;
-                    vmd_record.end_position=ep;
-                    fwrite(&vmd_record,sizeof(struct vmd),1,vmdFile);
-                    // write vmd record to the file ends here
-                    // for(ptr=start;ptr<=end;ptr++) printf("%c",*ptr);
-                    // printf("\n");
-                    // printf("-------------------------\n");
-                    start=end+1;
-                    continue;
-                }
-                // if } not found , then load the next chunk of 256 bytes
-                // and store it in buffer from index 256
-                if(x==fileLength) break;
-                if((fileLength-x)>256) toRead=256;
-                else toRead=fileLength-x;
-                fread(buffer+256,toRead,1,f);
-                buffer[256+toRead]='\0';
-                x=x+toRead;
-                end=strstr(buffer+256,"}");
-                if(end==NULL) break;
-                for(ptr=start+1;ptr<end;ptr++) if(*ptr=='$' && *(ptr+1)=='{') break;
-                if(*ptr=='$') start=ptr;
-                // write vmd record to the file starts here
-                for(ptr=start+2,ii=0;ptr<end;ptr++,ii++)
-                {
-                    vmd_record.var_name[ii]=*ptr;
-                }
-                vmd_record.var_name[ii]='\0';
-                sp=(x-toRead)+(start-buffer)-256;
-                ep=(x-toRead)+(end-buffer)-256;
-                cout<<"2--->"<<sp<<","<<ep<<endl;
-                vmd_record.start_position=sp;
-                vmd_record.end_position=ep;
-                fwrite(&vmd_record,sizeof(struct vmd),1,vmdFile);
-                // write vmd record to the file ends here
-                // for(ptr=start;ptr<=end;ptr++) printf("%c",*ptr);
-                // printf("\n");
-                strcpy(buffer,buffer+256);
-                end=end-256;
-                start=end+1;
-            }
-            // processing the contents of the buffer ends here
-            if(x==fileLength) break;
-        }
-        fclose(f);
-        fclose(vmdFile);
+    }
+    static void processCHTMLFileWithoutCreatingVMDFile(const char * chtmlFileName,const char * pathToVMDFile)
+    {
+
     }
     public:
     static void processCHTMLFile(const char *chtmlFileName,Request &request,int clientSocketDescriptor)
@@ -819,88 +670,22 @@ class TemplateEngine
         createVMDFileName(chtmlFileName,vmdFileName);
         string folderName=string("vmd_files");
         string pathToVMDFile=folderName+string(PATH_SEPARATOR)+string(vmdFileName);
-        bool generateVMDFile=false;
+        bool createVMDFile=false;
         if(FileSystemUtility::fileExists(pathToVMDFile.c_str()))
         {
             if(FileSystemUtility::getLastUpdatedTime(chtmlFileName)>FileSystemUtility::getLastUpdatedTime(pathToVMDFile.c_str()))
             {
-                generateVMDFile=true;
+                createVMDFile=true;
             }
+        }
+        if(createVMDFile)
+        {
+            createVMDFileAndProcessCHTMLFile(chtmlFileName,pathToVMDFile.c_str());
         }
         else
         {
-            generateVMDFile=true;
+            processCHTMLFileWithoutCreatingVMDFile(chtmlFileName,pathToVMDFile.c_str());
         }
-        if(generateVMDFile)
-        {
-            createVMDFile(chtmlFileName,pathToVMDFile.c_str());
-        }
-        // process the chtml file (pick up info from VMD file)
-        FILE *chtmlFile=fopen(chtmlFileName,"rb");
-        FILE *vmdFile=fopen(pathToVMDFile.c_str(),"rb");
-        fseek(chtmlFile,0,SEEK_END);
-        long fileLength=ftell(chtmlFile);
-        rewind(chtmlFile);  
-        long responseSize=fileLength;
-        string data;
-        struct vmd vmdRecord;
-        while(1)
-        {
-            fread(&vmdRecord,sizeof(struct vmd),1,vmdFile);
-            if(feof(vmdFile)) break;
-            responseSize=responseSize-((vmdRecord.end_position-vmdRecord.start_position)+1);
-            data=request.get(vmdRecord.var_name);
-            responseSize=responseSize+data.length();
-        }
-        cout<<"Response size is : "<<responseSize<<endl;
-        string mimeType;
-        mimeType=string("text/html");
-        char header[200];
-        sprintf(header,"HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %ld\r\nConnection: close\r\n\r\n",mimeType.c_str(),responseSize);
-        send(clientSocketDescriptor,header,strlen(header),0);
-        long bytesLeftToRead;
-        int bytesToRead;
-        char buffer[4096];
-        bytesLeftToRead=fileLength;
-        rewind(vmdFile);
-        long tmpBytesLeftToRead;
-        long bytesProcessedFromFile=0;
-        while(1)
-        {
-            fread(&vmdRecord,sizeof(struct vmd),1,vmdFile);
-            if(feof(vmdFile)) break;
-            tmpBytesLeftToRead=vmdRecord.start_position-bytesProcessedFromFile;
-            bytesToRead=4096;
-            while(tmpBytesLeftToRead>0)
-            {
-                if(tmpBytesLeftToRead<bytesToRead) bytesToRead=tmpBytesLeftToRead;
-                fread(buffer,bytesToRead,1,chtmlFile);
-                if(feof(chtmlFile)) break; // this won't happen on our case
-                bytesProcessedFromFile+=bytesToRead;
-                send(clientSocketDescriptor,buffer,bytesToRead,0);
-                tmpBytesLeftToRead=tmpBytesLeftToRead-bytesToRead;
-            }
-            fread(buffer,(vmdRecord.end_position-vmdRecord.start_position)+1,1,chtmlFile);
-            bytesProcessedFromFile+=(vmdRecord.end_position-vmdRecord.start_position)+1;
-            string data;
-            if(request.contains(vmdRecord.var_name))
-            {
-                data=request.get(vmdRecord.var_name);
-                send(clientSocketDescriptor,data.c_str(),data.length(),0);
-            }
-        }
-        bytesLeftToRead-=bytesProcessedFromFile;
-        bytesToRead=4096;
-        while(bytesLeftToRead>0)
-        {
-            if(bytesLeftToRead<bytesToRead) bytesToRead=bytesLeftToRead;
-            fread(buffer,bytesToRead,1,chtmlFile);
-            if(feof(chtmlFile)) break; // this won't happen on our case 
-            send(clientSocketDescriptor,buffer,bytesToRead,0);
-            bytesLeftToRead=bytesLeftToRead-bytesToRead;
-        }
-        fclose(chtmlFile);
-        fclose(vmdFile);
     }
 };
 
@@ -912,26 +697,6 @@ class Bro
         map<string,string> mimeTypes;
         ApplicationLevelContainer applicationLevelContainer;
         priority_queue<StartupFunction *,vector<StartupFunction *>,StartupFunctionComparator> startupFunctions;
-        bool isCHTML(const char *requestURI)
-        {
-            int len=strlen(requestURI);
-            if(len<7) return false;
-            const char *ptr1=requestURI+len-6;
-            char lastPart[7]={".chtml"};
-            const char *ptr2=lastPart;
-            char a,b;
-            while(*ptr1 && *ptr2)
-            {
-                a=*ptr1;
-                b=*ptr2;
-                if(a>=97 && a<=122) a-=32;
-                if(b>=97 && b<=122) b-=32;
-                if(a!=b) return false;
-                ptr1++;
-                ptr2++;
-            }
-            return true;
-        }
     public:
         Bro()
         {
@@ -955,28 +720,7 @@ class Bro
             }
         }
 
-        void processCHTMLResource(int clientSocketDiscriptor,const char * requestURI,Request &request)
-        {
-            if(this->staticResourceFolder.length()==0) 
-            {
-                // send back 404;
-                return;
-            }
-            if(!FileSystemUtility::directoryExists(this->staticResourceFolder.c_str())) 
-            {
-                // send back 404
-                return;
-            }
-            string resourcePath=this->staticResourceFolder+string(requestURI);
-            if(!FileSystemUtility::fileExists(resourcePath.c_str())) 
-            {
-                // send back 404
-                return;
-            }
-            TemplateEngine::processCHTMLFile(resourcePath.c_str(),request,clientSocketDiscriptor);
-
-        }
-        bool serveStaticResource(int clientSocketDescriptor,const char*requestURI)
+        bool serverStaticResource(int clientSocketDescriptor,const char*requestURI)
         {
             if(this->staticResourceFolder.length()==0) return false;
             if(!FileSystemUtility::directoryExists(this->staticResourceFolder.c_str())) return false;
@@ -1260,15 +1004,10 @@ class Bro
                     dataInRequest=requestURI+i+1;
                 }
                 cout<<"Request Arrived, URI is : "<<requestURI<<endl;
-                auto urlMappingIterator=urlMappings.find(string(requestURI));
-                if(urlMappingIterator==urlMappings.end())
+                auto urlMappingIterator=this->urlMappings.find(string(requestURI));
+                if(urlMappingIterator==this->urlMappings.end())
                 {
-                    if(isCHTML(requestURI))
-                    {
-                        Request request(method,requestURI,httpVersion,dataInRequest);
-                        processCHTMLResource(clientSocketDiscriptor,requestURI,request);
-                    }
-                    else if(!serveStaticResource(clientSocketDiscriptor,requestURI))
+                    if(!serverStaticResource(clientSocketDiscriptor,requestURI))
                     {
                         HttpErrorStatusUtility::sendNotFoundError(clientSocketDiscriptor,requestURI);
                     }
@@ -1283,6 +1022,7 @@ class Bro
                     continue;
                 }
                 // code to parse the header and then the payload if exists start here
+
                 // code to parse the header and then the payload if exists ends here
                 Request request(method,requestURI,httpVersion,dataInRequest);
                 while(1)
@@ -1295,15 +1035,10 @@ class Bro
                         break;
                     }
                     string forwardTo=request.forwardToWhichResource();
-                    urlMappingIterator=urlMappings.find(forwardTo);
-                    if(urlMappingIterator==urlMappings.end())
+                    urlMappingIterator=this->urlMappings.find(forwardTo);
+                    if(urlMappingIterator==this->urlMappings.end())
                     {
-                        if(isCHTML(forwardTo.c_str()))
-                        {
-                            request.forwardTo(string(""));
-                            processCHTMLResource(clientSocketDiscriptor,forwardTo.c_str(),request);
-                        }
-                        else if(!serveStaticResource(clientSocketDiscriptor,forwardTo.c_str()))
+                        if(!serverStaticResource(clientSocketDiscriptor,forwardTo.c_str()))
                         {
                             HttpErrorStatusUtility::sendNotFoundError(clientSocketDiscriptor,requestURI);
                         } 
@@ -1390,7 +1125,7 @@ int main()
         //     )"""";
         //     response.setContentType("text/html");
         //     response << html;
-        // }); 
+        // });
 
 
         bro.get("/save_test1_data", [](Request &request, Response &response) {
@@ -1565,11 +1300,8 @@ int main()
                 slogan+=line;
             }
             iFile.close();
-            cout<<"size of slogan of the day is : "<<slogan.length()<<endl;
-            request.set("sloganOfTheDay",slogan);
-            request.set("city1","indore");
-            request.set("city2","goa");
-            _forward_(request,string("/WordsOfWisdom.chtml"));   
+            // request.set("sloganOfTheDay",slogan);
+            _forward_(request,string("WordsOfWisdom.chtml"));   
         });
 
 

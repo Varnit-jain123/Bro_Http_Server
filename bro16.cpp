@@ -36,6 +36,11 @@ enum __container_operation_failure_reason__
     __VALUE_SIZE_MISMATCH__
 };
 
+class Stringifyable
+{
+    public:
+        virtual string stringify()=0;
+};
 
 class Container
 {
@@ -441,15 +446,19 @@ class Request
     }
     map<string,string> varMap; // this will be changed later on
     public:
-    void set(string name,string value) // changed later on
+    void setCHTMLVariable(string name,string value) // changed later on
     {
         varMap.insert({name,value}); // map.insert(pair<string,string>(name,value)); 
     }
-    bool contains(string name) // changed later on
+    void setCHTMLVariable(string name,Stringifyable *stringifyable)
+    {
+        varMap.insert({name,stringifyable->stringify()}); 
+    }
+    bool containsCHTMLVariable(string name) // changed later on
     {
         return varMap.find(name)!=varMap.end();
     }
-    string get(string name) // changed later on
+    string getCHTMLVariable(string name) // changed later on
     {
         string data="";
         auto a=varMap.find(name);
@@ -849,12 +858,11 @@ class TemplateEngine
             fread(&vmdRecord,sizeof(struct vmd),1,vmdFile);
             if(feof(vmdFile)) break;
             responseSize=responseSize-((vmdRecord.end_position-vmdRecord.start_position)+1);
-            data=request.get(vmdRecord.var_name);
+            data=request.getCHTMLVariable(vmdRecord.var_name);
             responseSize=responseSize+data.length();
         }
         cout<<"Response size is : "<<responseSize<<endl;
         string mimeType;
-        mimeType=string("text/html");
         char header[200];
         sprintf(header,"HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %ld\r\nConnection: close\r\n\r\n",mimeType.c_str(),responseSize);
         send(clientSocketDescriptor,header,strlen(header),0);
@@ -865,42 +873,19 @@ class TemplateEngine
         rewind(vmdFile);
         long tmpBytesLeftToRead;
         long bytesProcessedFromFile=0;
+        
         while(1)
         {
+            
             fread(&vmdRecord,sizeof(struct vmd),1,vmdFile);
             if(feof(vmdFile)) break;
             tmpBytesLeftToRead=vmdRecord.start_position-bytesProcessedFromFile;
             bytesToRead=4096;
-            while(tmpBytesLeftToRead>0)
-            {
-                if(tmpBytesLeftToRead<bytesToRead) bytesToRead=tmpBytesLeftToRead;
-                fread(buffer,bytesToRead,1,chtmlFile);
-                if(feof(chtmlFile)) break; // this won't happen on our case
-                bytesProcessedFromFile+=bytesToRead;
-                send(clientSocketDescriptor,buffer,bytesToRead,0);
-                tmpBytesLeftToRead=tmpBytesLeftToRead-bytesToRead;
-            }
-            fread(buffer,(vmdRecord.end_position-vmdRecord.start_position)+1,1,chtmlFile);
-            bytesProcessedFromFile+=(vmdRecord.end_position-vmdRecord.start_position)+1;
-            string data;
-            if(request.contains(vmdRecord.var_name))
-            {
-                data=request.get(vmdRecord.var_name);
-                send(clientSocketDescriptor,data.c_str(),data.length(),0);
-            }
-        }
-        bytesLeftToRead-=bytesProcessedFromFile;
-        bytesToRead=4096;
-        while(bytesLeftToRead>0)
-        {
-            if(bytesLeftToRead<bytesToRead) bytesToRead=bytesLeftToRead;
-            fread(buffer,bytesToRead,1,chtmlFile);
-            if(feof(chtmlFile)) break; // this won't happen on our case 
-            send(clientSocketDescriptor,buffer,bytesToRead,0);
-            bytesLeftToRead=bytesLeftToRead-bytesToRead;
+
         }
         fclose(chtmlFile);
         fclose(vmdFile);
+
     }
 };
 
@@ -1328,6 +1313,33 @@ class Bro
 };
 
 // Bobby [The Web application developer - User o<f bro web server]
+class Bulb:public Stringifyable
+{
+    private:
+        int wattage;
+        int price;
+    public:
+        void setWattage(int wattage)
+        {
+            this->wattage=wattage;
+        }
+        int getWattage()
+        {
+            return this->wattage;
+        }
+        void setPrice(int price)
+        {
+            this->price=price;
+        }
+        int getPrice()
+        {
+            return this->price;
+        }
+        string stringify()
+        {
+            return "Bulb wattage is = "+to_string(this->wattage)+", price = "+to_string(this->price)+"]";
+        }
+};
 int main()
 {
     try
@@ -1566,9 +1578,13 @@ int main()
             }
             iFile.close();
             cout<<"size of slogan of the day is : "<<slogan.length()<<endl;
-            request.set("sloganOfTheDay",slogan);
-            request.set("city1","indore");
-            request.set("city2","goa");
+            request.setCHTMLVariable("sloganOfTheDay",slogan);
+            request.setCHTMLVariable("city1","indore");
+            request.setCHTMLVariable("city2","goa");
+            Bulb bulb;
+            bulb.setWattage(100);
+            bulb.setPrice(250);
+            request.setCHTMLVariable("bulb",bulb.stringify());
             _forward_(request,string("/WordsOfWisdom.chtml"));   
         });
 
