@@ -42,6 +42,7 @@ class Stringifyable
         virtual string stringify()=0;
 };
 
+
 class Container
 {
     typedef struct _bag
@@ -454,6 +455,70 @@ class Request
     {
         varMap.insert({name,stringifyable->stringify()}); 
     }
+    void setCHTMLVariable(string name,const char *ptr)
+    {
+        varMap.insert({name,string(ptr)}); 
+    }
+    void setCHTMLVariable(string name,short int value)
+    {
+        varMap.insert({name,to_string(value)}); 
+    }
+    void setCHTMLVariable(string name,unsigned short int value)
+    {
+        varMap.insert({name,to_string(value)}); 
+    }
+    void setCHTMLVariable(string name,int value)
+    {
+        varMap.insert({name,to_string(value)}); 
+    }
+    void setCHTMLVariable(string name,unsigned int value)
+    {
+        varMap.insert({name,to_string(value)}); 
+    }
+    void setCHTMLVariable(string name,long value)
+    {
+        varMap.insert({name,to_string(value)}); 
+    }
+    void setCHTMLVariable(string name,unsigned long value)
+    {
+        varMap.insert({name,to_string(value)}); 
+    }
+    void setCHTMLVariable(string name,long long int value)
+    {
+        varMap.insert({name,to_string(value)}); 
+    }
+    void setCHTMLVariable(string name,unsigned long long int value)
+    {
+        varMap.insert({name,to_string(value)}); 
+    }
+    void setCHTMLVariable(string name,float value)
+    {
+        varMap.insert({name,to_string(value)}); 
+    }
+    void setCHTMLVariable(string name,double value)
+    {
+        varMap.insert({name,to_string(value)}); 
+    }
+    void setCHTMlVariable(string name,long double value)
+    {
+        varMap.insert({name,to_string(value)}); 
+    }
+    void setCHTMLVariable(string name,char value)
+    {
+        string str;
+        str+=value;
+        varMap.insert({name,str}); 
+    }
+    void setCHTMLVariable(string name,unsigned char value)
+    {
+        string str;
+        str+=value;
+        varMap.insert({name,str}); 
+    }
+    void setCHTMLVariable(string name,bool value)
+    {
+        varMap.insert({name,(value==true)?"true":"false"}); 
+    }
     bool containsCHTMLVariable(string name) // changed later on
     {
         return varMap.find(name)!=varMap.end();
@@ -863,6 +928,7 @@ class TemplateEngine
         }
         cout<<"Response size is : "<<responseSize<<endl;
         string mimeType;
+        mimeType=string("text/html");
         char header[200];
         sprintf(header,"HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %ld\r\nConnection: close\r\n\r\n",mimeType.c_str(),responseSize);
         send(clientSocketDescriptor,header,strlen(header),0);
@@ -873,19 +939,42 @@ class TemplateEngine
         rewind(vmdFile);
         long tmpBytesLeftToRead;
         long bytesProcessedFromFile=0;
-        
         while(1)
         {
-            
             fread(&vmdRecord,sizeof(struct vmd),1,vmdFile);
             if(feof(vmdFile)) break;
             tmpBytesLeftToRead=vmdRecord.start_position-bytesProcessedFromFile;
             bytesToRead=4096;
-
+            while(tmpBytesLeftToRead>0)
+            {
+                if(tmpBytesLeftToRead<bytesToRead) bytesToRead=tmpBytesLeftToRead;
+                fread(buffer,bytesToRead,1,chtmlFile);
+                if(feof(chtmlFile)) break; // this won't happen on our case
+                bytesProcessedFromFile+=bytesToRead;
+                send(clientSocketDescriptor,buffer,bytesToRead,0);
+                tmpBytesLeftToRead=tmpBytesLeftToRead-bytesToRead;
+            }
+            fread(buffer,(vmdRecord.end_position-vmdRecord.start_position)+1,1,chtmlFile);
+            bytesProcessedFromFile+=(vmdRecord.end_position-vmdRecord.start_position)+1;
+            string data;
+            if(request.containsCHTMLVariable(vmdRecord.var_name))
+            {
+                data=request.getCHTMLVariable(vmdRecord.var_name);
+                send(clientSocketDescriptor,data.c_str(),data.length(),0);
+            }
+        }
+        bytesLeftToRead-=bytesProcessedFromFile;
+        bytesToRead=4096;
+        while(bytesLeftToRead>0)
+        {
+            if(bytesLeftToRead<bytesToRead) bytesToRead=bytesLeftToRead;
+            fread(buffer,bytesToRead,1,chtmlFile);
+            if(feof(chtmlFile)) break; // this won't happen on our case 
+            send(clientSocketDescriptor,buffer,bytesToRead,0);
+            bytesLeftToRead=bytesLeftToRead-bytesToRead;
         }
         fclose(chtmlFile);
         fclose(vmdFile);
-
     }
 };
 
@@ -1337,9 +1426,10 @@ class Bulb:public Stringifyable
         }
         string stringify()
         {
-            return "Bulb wattage is = "+to_string(this->wattage)+", price = "+to_string(this->price)+"]";
+            return "Bulb wattage is = "+to_string(this->wattage)+", price = "+to_string(this->price);
         }
 };
+
 int main()
 {
     try
@@ -1584,7 +1674,25 @@ int main()
             Bulb bulb;
             bulb.setWattage(100);
             bulb.setPrice(250);
-            request.setCHTMLVariable("bulb",bulb.stringify());
+            request.setCHTMLVariable("bulb",&bulb);
+            short int a=10;
+            unsigned short int b=65520;
+            int c=-200000;
+            unsigned int d=4000000000;  
+            long int e=-9000000000;
+            unsigned long int f=18000000000;
+            float g=3.14159f;
+            double h=2.718281828459045;
+            bool i=true;
+            request.setCHTMLVariable("a",a);
+            request.setCHTMLVariable("b",b);
+            request.setCHTMLVariable("c",c);
+            request.setCHTMLVariable("d",d);
+            request.setCHTMLVariable("e",e);
+            request.setCHTMLVariable("f",f); 
+            request.setCHTMLVariable("g",g);
+            request.setCHTMLVariable("h",h);
+            request.setCHTMLVariable("i",i);
             _forward_(request,string("/WordsOfWisdom.chtml"));   
         });
 

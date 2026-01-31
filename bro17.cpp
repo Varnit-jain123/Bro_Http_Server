@@ -8,7 +8,6 @@
 #include<unistd.h>
 #include<sys/stat.h>
 #include <filesystem>
-#include<set> 
 
 #ifdef _WIN32
     const char *PATH_SEPARATOR="\\";
@@ -376,26 +375,6 @@ class Error
             return this->error;
         }
 };
-class Cookie
-{
-    private:
-        string name;
-        string value;
-    public:
-        Cookie(string name,string value)
-        {
-            this->name=name;
-            this->value=value;
-        }
-        string getName()
-        {
-            return this->name;
-        }
-        string getValue()
-        {
-            return this->value;
-        }
-};
 class Request:public Container
 {
     private:
@@ -572,9 +551,7 @@ class Request:public Container
 class Response
 {
     private :
-        set<string> cookies;
         string contentType;
-        int cookiesDataLength;
         forward_list<string> content;
         forward_list<string>::iterator contentIterator;
         unsigned long contentLength;
@@ -583,7 +560,6 @@ class Response
         {
             this->contentLength=0;
             this->contentIterator=this->content.before_begin();
-            this->cookiesDataLength=0;
         }
         ~Response()
         {
@@ -596,25 +572,7 @@ class Response
                 this->contentType=contentType;         
             }
         }
-        void addCookie(Cookie &cookie)
-        {
-            string name=cookie.getName();
-            if(name.length()==0) return;
-            string value=cookie.getValue();
-            if(value.length()==0) return;
-            string cookieString=name+string("=")+value;
-            if(cookies.find(cookieString)!=cookies.end()) return;
-            this->cookiesDataLength+=cookieString.length();
-            this->cookiesDataLength+=12; // 12 for "Set-Cookie: "
-            this->cookiesDataLength+=2; // for \r\n
-            cookies.insert(cookieString);
-        }
-        Response & operator<<(Cookie cookie)
-        {
-            this->addCookie(cookie);
-            return *this;
-        }
-        Response & operator<<(string content)
+        Response& operator<<(string content)
         {
             this->contentLength+=content.length();
             this->contentIterator=this->content.insert_after(this->contentIterator,content);
@@ -630,17 +588,9 @@ class HTTPResponseUtility
     public:
     static void sendResponse(int clientSocketDescriptor,Response &response)
     {
-    //char header[200];
-    char *header=new char[200+response.cookiesDataLength];
+    char header[200];
     int contentLength=response.contentLength;
-    sprintf(header,"HTTP/1.1 200 OK\r\nContent-Type:text/html\nContent-Length:%d\n",contentLength);
-    for(string cookieString:response.cookies)
-    {
-        strcat(header,"Set-Cookie: ");
-        strcat(header,cookieString.c_str());
-        strcat(header,"\r\n"); 
-    }
-    strcat(header,"Connection: close\r\n\r\n");
+    sprintf(header,"HTTP/1.1 200 OK\r\nContent-Type:text/html\nContent-Length:%d\nConnection: close\r\n\r\n",contentLength);
     send(clientSocketDescriptor,header,strlen(header),0);
     auto contentIterator=response.content.begin();
     while(contentIterator!=response.content.end())
@@ -649,7 +599,6 @@ class HTTPResponseUtility
         send(clientSocketDescriptor,str.c_str(),str.length(),0);
         ++contentIterator;        
     }
-    delete []header;
     }
 };
 
@@ -1293,7 +1242,6 @@ class Bro
                 }
                 char *method,*requestURI,*httpVersion,*dataInRequest;
                 requestBuffer[requestLength]='\0';
-                cout<<requestBuffer<<endl;
                 // printf("****************\n\n");
                 // printf("%s\n",requestBuffer);
                 // printf("\n\n****************\n\n");
@@ -1763,11 +1711,6 @@ int main()
             int whatever;
             request.get("score",&whatever,NULL,NULL);
             cout<<"Score received from previous request handler is : "<<whatever<<endl;
-            Cookie c1("RollNumber","101");
-            Cookie c2("Name","Bobby");
-            Cookie c3("City","Indore");
-            response<<c1<<c2;
-            response.addCookie(c3);
             response.setContentType("text/html");
             response<<"<html><head></head><body>Cool</body></html>";
         });

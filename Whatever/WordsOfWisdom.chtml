@@ -9,5 +9,15 @@
 ${sloganOfTheDay}<br>
 I line in ${city1}<br><br>
 It is far far away from ${city2}<br><br>
+Bulb [${bulb}]<br>
+short int ${a}<br>
+unsigned short int ${b}<br>
+int ${c}<br>
+unsigned int ${d}<br>
+long int ${e}<br>
+unsigned long int ${f}<br>
+float ${g}<br>
+double ${h}<br>
+bool ${i}<br>
 </body>
 </html>
