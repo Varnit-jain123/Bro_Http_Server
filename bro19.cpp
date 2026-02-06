@@ -43,132 +43,6 @@ class Stringifyable
         virtual string stringify()=0;
 };
 
-class GMTDateTime 
-{
-    private:
-        struct tm gmtDateTime;
-        bool isValid;
-    public:
-        GMTDateTime()
-        {
-            time_t elapsedSeconds;
-            elapsedSeconds=time(NULL);
-            if(elapsedSeconds==-1)
-            {
-                this->isValid=false;
-                this->gmtDateTime.tm_sec=0;
-                this->gmtDateTime.tm_min=0;
-                this->gmtDateTime.tm_hour=0;
-                this->gmtDateTime.tm_mday=0;
-                this->gmtDateTime.tm_mon=0;
-                this->gmtDateTime.tm_year=0;
-                return;
-            }
-            struct tm *gmt=gmtime(&elapsedSeconds);
-            this->gmtDateTime=*gmt;
-            this->isValid=true;
-        }
-        //  month (0-11)
-        // year (year-1900)
-        GMTDateTime(int day,int month,int year,int hour,int minute,int second)
-        {
-            struct tm tmptm;
-            tmptm.tm_mday=day;
-            tmptm.tm_mon=month-1;
-            tmptm.tm_year=year-1900;
-            tmptm.tm_hour=hour;
-            tmptm.tm_min=minute;
-            tmptm.tm_sec=second;
-            time_t t=mktime(&tmptm);
-            if(mktime(&tmptm)==-1) // mktime will set wday part in the structure
-            {
-                this->isValid=false;
-                this->gmtDateTime.tm_sec=0;
-                this->gmtDateTime.tm_min=0;
-                this->gmtDateTime.tm_hour=0;
-                this->gmtDateTime.tm_mday=0;
-                this->gmtDateTime.tm_mon=0;
-                this->gmtDateTime.tm_year=0;
-                return;
-            }
-            this->isValid=true;
-            this->gmtDateTime=tmptm;
-        }
-        int getDay()
-        {
-            if(!this->isValid) return -1;
-            return this->gmtDateTime.tm_mday;
-        }
-        int getMonth()
-        {
-            if(!this->isValid) return -1;
-            return this->gmtDateTime.tm_mon+1;
-        }
-        int getYear()
-        {
-            if(!this->isValid) return -1;
-            return this->gmtDateTime.tm_year+1900;
-        }
-        int getHour()
-        {
-            if(!this->isValid) return -1;
-            return this->gmtDateTime.tm_hour;
-        }
-        int getMinute()
-        {
-            if(!this->isValid) return -1;
-            return this->gmtDateTime.tm_min;
-        }
-        int getSecond()
-        {   
-            if(!this->isValid) return -1;
-            return this->gmtDateTime.tm_sec;
-        }
-        int getWeekDay()
-        {
-            if(!this->isValid) return -1;
-            return this->gmtDateTime.tm_wday;
-        }
-        int getYearDay()
-        {
-            if(!this->isValid) return -1;
-            return this->gmtDateTime.tm_yday;
-        }
-        bool isValidDateTime()
-        {
-            return this->isValid;
-        }
-        string stringfy()
-        {
-            if(!this->isValid) return string("");
-            char buffer[30];
-            strftime(buffer,30,"%a, %d %b %Y %H:%M:%S GMT",&(this->gmtDateTime));
-            return string(buffer);
-        }
-        void addSeconds(int seconds)
-        {
-            if(!this->isValid) return;
-            this->gmtDateTime.tm_sec+=seconds;
-            mktime(&(this->gmtDateTime)); // to update the structure after addition of seconds
-        }
-        void addMinutes(int minutes)
-        {
-            if(!this->isValid) return;
-            this->gmtDateTime.tm_min+=minutes;
-            mktime(&(this->gmtDateTime)); // to update the structure after addition of minutes
-        }
-        void addHours(int hours)
-        {
-            if(!this->isValid) return;
-            this->gmtDateTime.tm_hour+=hours;
-            mktime(&(this->gmtDateTime)); // to update the structure after addition of hours
-        }
-};
-ostream & operator <<(ostream &out,GMTDateTime &gmtDateTime)
-{
-    out<<gmtDateTime.stringfy();
-    return out;
-}
 
 class Container
 {
@@ -273,7 +147,7 @@ class BroUtilities
     static bool isHexChar(int w)
     {
         if(w>=48 && w<=57) return true;
-        if(w>='a' && w<='f') return true;
+        if(w<='a' && w<='f') return true;
         if(w>='A' && w<='F') return true;
         return false;
     }
@@ -502,37 +376,16 @@ class Error
             return this->error;
         }
 };
-
-typedef enum _cookie_same_site_flag
-{
-    COOKIE_SAME_SITE_STRICT,
-    COOKIE_SAME_SITE_LAX,
-    COOKIE_SAME_SITE_NONE   
-}COOKIE_SAME_SITE_FLAG;
-
 class Cookie
 {
     private:
         string name;
         string value;
-        string expiresOn;
-        long maxAge;
-        string domain;
-        string path;
-        bool isSecure;
-        bool isHttpOnly;
-        COOKIE_SAME_SITE_FLAG sameSiteFlag;
     public:
         Cookie(string name,string value)
         {
             this->name=name;
             this->value=value;
-            this->expiresOn="";
-            this->maxAge=-1; 
-            this->domain="";
-            this->path="";
-            this->isSecure=false;
-            this->isHttpOnly=false;
         }
         string getName()
         {
@@ -541,86 +394,6 @@ class Cookie
         string getValue()
         {
             return this->value;
-        }
-        void setExpiresOn(GMTDateTime &gmtDateTime)
-        {
-            this->expiresOn=gmtDateTime.stringfy();
-        }
-        string getExpiresOn()
-        {
-            return this->expiresOn;
-        }
-        void setMaxAgeInSeconds(int maxAgeInSeconds)
-        {
-            this->maxAge=maxAgeInSeconds;
-        }
-        void setMaxAgeInMinutes(int maxAgeInMinutes)
-        {
-            this->maxAge=maxAgeInMinutes*60;
-        }
-        void setMaxAgeInHours(int maxAgeInHours)
-        {
-            this->maxAge=maxAgeInHours*60*60;
-        }
-        void setDomain(string domain)
-        {
-            this->domain=domain;
-        }
-        string getDomain()
-        {
-            return this->domain;
-        }
-        void setPath(string path)
-        {
-            this->path=path;
-        }
-        string getPath()
-        {            
-            return this->path;
-        }
-        void setSecure(bool secure)
-        {
-            this->isSecure=secure;
-        }
-        bool getSecure()
-        {
-            return this->isSecure;
-        }
-        void setHttpOnly(bool httpOnly)
-        {
-            this->isHttpOnly=httpOnly;
-        }
-        bool getHttpOnly()
-        {            
-            return this->isHttpOnly;
-        }
-        string stringfy()
-        {
-            string cookieString=this->name+string("=")+this->value;
-            if(this->expiresOn.length()>0) cookieString+=string("; Expires=")+this->expiresOn;
-            if(this->maxAge!=-1) cookieString+=string("; Max-Age=")+to_string(this->maxAge);
-            if(this->domain.length()>0) cookieString+=string("; Domain=")+this->domain;
-            if(this->path.length()>0) cookieString+=string("; Path=")+this->path;
-            if(this->isSecure) cookieString+=string("; Secure");
-            if(this->isHttpOnly) cookieString+=string("; HttpOnly");
-            switch (sameSiteFlag)
-            {
-                case COOKIE_SAME_SITE_STRICT:
-                    cookieString+=string("; SameSite=Strict");
-                    break;
-                case COOKIE_SAME_SITE_LAX:
-                    cookieString+=string("; SameSite=Lax");
-                    break;
-                case COOKIE_SAME_SITE_NONE:
-                    cookieString+=string("; SameSite=None");
-                    break;
-                default:
-                    break;
-            }
-            cout<<"+++++++++++++++++++++"<<endl;
-            cout<<"Cookie String:["<<cookieString<<"]"<<endl;
-            cout<<"+++++++++++++++++++++"<<endl;
-            return cookieString;
         }
 };
 class HeaderUtility

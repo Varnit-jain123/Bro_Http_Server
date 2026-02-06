@@ -145,24 +145,6 @@ class GMTDateTime
             strftime(buffer,30,"%a, %d %b %Y %H:%M:%S GMT",&(this->gmtDateTime));
             return string(buffer);
         }
-        void addSeconds(int seconds)
-        {
-            if(!this->isValid) return;
-            this->gmtDateTime.tm_sec+=seconds;
-            mktime(&(this->gmtDateTime)); // to update the structure after addition of seconds
-        }
-        void addMinutes(int minutes)
-        {
-            if(!this->isValid) return;
-            this->gmtDateTime.tm_min+=minutes;
-            mktime(&(this->gmtDateTime)); // to update the structure after addition of minutes
-        }
-        void addHours(int hours)
-        {
-            if(!this->isValid) return;
-            this->gmtDateTime.tm_hour+=hours;
-            mktime(&(this->gmtDateTime)); // to update the structure after addition of hours
-        }
 };
 ostream & operator <<(ostream &out,GMTDateTime &gmtDateTime)
 {
@@ -273,7 +255,7 @@ class BroUtilities
     static bool isHexChar(int w)
     {
         if(w>=48 && w<=57) return true;
-        if(w>='a' && w<='f') return true;
+        if(w<='a' && w<='f') return true;
         if(w>='A' && w<='F') return true;
         return false;
     }
