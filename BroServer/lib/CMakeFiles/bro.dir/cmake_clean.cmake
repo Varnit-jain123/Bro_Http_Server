@@ -5,6 +5,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/bro.dir/bro_application_level_Container_Dependent_Function.cpp.o.d"
   "CMakeFiles/bro.dir/bro_application_level_Container_Dependent_Startup_Function.cpp.o"
   "CMakeFiles/bro.dir/bro_application_level_Container_Dependent_Startup_Function.cpp.o.d"
+  "CMakeFiles/bro.dir/bro_container.cpp.o"
+  "CMakeFiles/bro.dir/bro_container.cpp.o.d"
   "CMakeFiles/bro.dir/bro_cookies.cpp.o"
   "CMakeFiles/bro.dir/bro_cookies.cpp.o.d"
   "CMakeFiles/bro.dir/bro_error.cpp.o"

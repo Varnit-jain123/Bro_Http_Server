@@ -91,10 +91,6 @@
         free(bag.ptr); // to release the memory by bro server programmer
         if(success) *success=true;
     }
-    bool Container::contains(string keyName)
-    {
-        auto iterator=this->dataSet.find(keyName);
-        return iterator!=this->dataSet.end();
-    }
+    
 
 #endif

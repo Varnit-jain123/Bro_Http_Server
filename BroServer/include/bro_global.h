@@ -11,7 +11,7 @@
     #include<sys/stat.h>
     #include <filesystem>
     #include<set> 
-
+    
     #ifdef _WIN32
         #include<windows.h>
     #endif
@@ -20,17 +20,11 @@
         #include<arpa/inet.h>
     #endif
 
-    
-     #ifdef _WIN32
-        const char *PATH_SEPARATOR="\\";
+    extern const char *PATH_SEPARATOR;
+    #ifdef _WIN32
         #include<windows.h>
     #endif
-    #ifdef linux
-        const char *PATH_SEPARATOR="/";
-    #endif
-
-
-
+    
     using namespace std;
 
     // Amit [The bro programmer]

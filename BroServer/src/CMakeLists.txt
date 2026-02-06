@@ -20,5 +20,6 @@ add_library(bro bro_global.cpp
             bro_application_level_Container_Dependent_Startup_Function.cpp
             bro_startup_function_comparator.cpp
             bro_template_engine.cpp
+            bro_container.cpp
             bro.cpp
             )
