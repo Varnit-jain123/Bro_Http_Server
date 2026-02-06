@@ -396,15 +396,54 @@ class Cookie
             return this->value;
         }
 };
+class HeaderUtility
+{
+    private:
+        HeaderUtility(){}
+    public:
+        static void parseHeader(const char *header,map<string,string> &headerFieldsMap)
+        {
+            const char *sp,*ep,*colonPtr,*ptr;
+            ptr=header;
+            while(*ptr)
+            {
+                colonPtr=NULL;
+                sp=ptr;
+                while(*ptr && *ptr!='\r' && *ptr!='\n') 
+                {
+                    if(colonPtr==NULL && *ptr==':') colonPtr=ptr;
+                    ptr++;
+                }
+                ep=ptr-1;
+                if(*ptr=='\r') ptr+=2;
+                else ptr+=1;
+                if(sp==ptr || colonPtr==NULL) //never happen
+                {
+                    ptr++;
+                    continue;
+                }
+                string fieldName(sp,colonPtr-sp);
+                if(*(colonPtr+1)==' ') sp=colonPtr+2;
+                else sp=colonPtr+1;
+                string fieldValue(sp,ep-sp+1);
+                transform(fieldName.begin(),fieldName.end(),fieldName.begin(),::tolower);
+                // cout<<"["<<fieldName<<"]["<<fieldValue<<"]"<<endl;
+                // headerFieldsMap.insert(pair<string,string>(fieldName,fieldValue));
+                headerFieldsMap.insert({fieldName,fieldValue});
+                if(*ptr=='\r' && *(ptr+1)=='\n') break; //header ends
+            }
+        }
+};
 class Request:public Container
 {
     private:
     map<string,string> dataMap;
+    map<string,string> &headerFieldsMap;
     string _forwardTo;
     char *method;
     const char *requestURI;
     char *httpVersion;
-    Request(char *method,const char *requestURI,char *httpVersion,char *dataInRequest)
+    Request(char *method,const char *requestURI,char *httpVersion,char *dataInRequest,map<string,string> &headerFieldsMap) : headerFieldsMap(headerFieldsMap)
     {
         this->method=method;
         this->requestURI=requestURI;
@@ -563,9 +602,44 @@ class Request:public Container
             return string("");
         }
         return iterator->second;
-
     }
-
+    string getCookieValue(string name)
+    {
+        auto f=headerFieldsMap.find("cookie");
+        if(f==headerFieldsMap.end()) return string("");
+        string cookiesString=f->second;
+        const char *ptr=cookiesString.c_str()   ;
+        const char *nsp,*nep,*vsp,*vep;
+        while(*ptr)
+        {
+            if(*ptr==' ') ptr++;
+            if(*ptr=='\0') break;
+            nsp=ptr;
+            nep=ptr;
+            while(*nep && *nep!='=') nep++;
+            if(*nep=='\0') break; // this will not happen
+            vsp=nep+1;
+            vep=vsp;
+            while(*vep && *vep!=';') vep++;
+            nep--; // nep is pointing to the block that contains =
+            vep--; // vep is pointing to the block that contains \0 or ;
+            string cookieName(nsp,nep-nsp+1);
+            string cookieValue(vsp,vep-vsp+1);
+            // cout<<"Cookie Name:["<<cookieName<<"]"<<endl;       
+            // cout<<"Cookie Value:["<<cookieValue<<"]"<<endl;       
+            if(cookieName==name) return cookieValue;
+            ptr=vep+2;
+        }
+        return string("");
+    }
+    void getCookies(list<Cookie> &cookies)
+    {
+        // code to be implemented later
+    }
+    void getCookieNames(list<string> &cookieName)
+    {
+        // code to be implemented later
+    }
     friend class Bro;
 	// request related data and methods
 };
@@ -1378,7 +1452,9 @@ class Bro
                     continue;
                 }
                 // code to parse the first line of the http request ends here
+                int headerStartIndex=i;
                 i=0;
+                dataInRequest=NULL;
                 while(requestURI[i]!='\0' && requestURI[i]!='?') i++;
                 if(requestURI[i]=='?') 
                 {
@@ -1391,7 +1467,9 @@ class Bro
                 {
                     if(isCHTML(requestURI))
                     {
-                        Request request(method,requestURI,httpVersion,dataInRequest);
+                        map<string,string> headerFieldsMap;
+                        HeaderUtility::parseHeader(requestBuffer+headerStartIndex,headerFieldsMap);
+                        Request request(method,requestURI,httpVersion,dataInRequest,headerFieldsMap);
                         processCHTMLResource(clientSocketDiscriptor,requestURI,request);
                     }
                     else if(!serveStaticResource(clientSocketDiscriptor,requestURI))
@@ -1409,8 +1487,10 @@ class Bro
                     continue;
                 }
                 // code to parse the header and then the payload if exists start here
+                map<string,string> headerFieldsMap;
+                HeaderUtility::parseHeader(requestBuffer+headerStartIndex,headerFieldsMap);
                 // code to parse the header and then the payload if exists ends here
-                Request request(method,requestURI,httpVersion,dataInRequest);
+                Request request(method,requestURI,httpVersion,dataInRequest,headerFieldsMap);
                 while(1)
                 {
                     Response response;
@@ -1575,6 +1655,11 @@ int main()
         });
 
         bro.post("/save_test2_data", [](Request &request, Response &response) {
+            cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
+            cout<<request.getCookieValue("RollNumber")<<endl;
+            cout<<request.getCookieValue("Name")<<endl;
+            cout<<request.getCookieValue("City")<<endl;
+            cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
             const char *html = R""""(
             <!DOCTYPE html>
             <html>
