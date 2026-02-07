@@ -12,6 +12,181 @@
 #include<bro_string_utility.h>
 #include<bro_http_response_utility.h>
 
+void request_processor(int clientSocketDiscriptor,Bro *bro)
+{
+    char requestBuffer[4097]; // one extra byte for null termination
+    int requestLength;
+    int x;
+    requestLength=recv(clientSocketDiscriptor,requestBuffer,sizeof(requestBuffer)-1,0); 
+    if(requestLength==0 || requestLength==-1)
+    {
+        close(clientSocketDiscriptor);
+        return;
+    }
+    char *method,*requestURI,*httpVersion,*dataInRequest;
+    requestBuffer[requestLength]='\0';
+    cout<<requestBuffer<<endl;
+    // printf("****************\n\n");
+    // printf("%s\n",requestBuffer);
+    // printf("\n\n****************\n\n");
+    // code to parse the first line of the http request starts here
+    // first line format : REQUEST_METHOD SPACE URI SPACE HTTP_VERSION CRLF
+    method=requestBuffer;
+    int i=0;
+    while(requestBuffer[i]!=' ' && requestBuffer[i]) i++;  
+    if(requestBuffer[i]=='\0')
+    {
+        HttpErrorStatusUtility::sendBadRequestError(clientSocketDiscriptor);
+        close(clientSocketDiscriptor);
+        return;
+    }
+    requestBuffer[i]='\0';
+    i++;
+    if(requestBuffer[i]=='\0' || requestBuffer[i]==' ')
+    {
+        HttpErrorStatusUtility::sendBadRequestError(clientSocketDiscriptor);
+        close(clientSocketDiscriptor);
+        return;
+    }
+    StringUtility::toLowerCase(method);
+    if(!(strcmp(method,"get")==0 ||
+    strcmp(method,"post")==0 ||
+    strcmp(method,"put")==0 ||
+    strcmp(method,"delete")==0 ||
+    strcmp(method,"connect")==0 ||
+    strcmp(method,"options")==0 ||
+    strcmp(method,"trace")==0 ||
+    strcmp(method,"head")==0))
+    {
+        HttpErrorStatusUtility::sendBadRequestError(clientSocketDiscriptor);
+        close(clientSocketDiscriptor);
+        return;
+    }
+    requestURI=requestBuffer+i;
+    while(requestBuffer[i]!=' ' && requestBuffer[i]) i++;
+    if(requestBuffer[i]=='\0')
+    {
+        HttpErrorStatusUtility::sendBadRequestError(clientSocketDiscriptor);
+        close(clientSocketDiscriptor);
+        return;
+    }
+    requestBuffer[i]='\0';
+    i++;
+    if(requestBuffer[i]=='\0' || requestBuffer[i]==' ')
+    {
+        HttpErrorStatusUtility::sendBadRequestError(clientSocketDiscriptor);
+        close(clientSocketDiscriptor);
+        return;
+    }
+    httpVersion=requestBuffer+i;
+    while(requestBuffer[i]!='\r' && requestBuffer[i]!='\n' && requestBuffer[i]) i++;
+    if(requestBuffer[i]=='\0')
+    {
+        HttpErrorStatusUtility::sendBadRequestError(clientSocketDiscriptor); 
+        close(clientSocketDiscriptor);
+        return;
+    }
+    if(requestBuffer[i]=='\r' && requestBuffer[i+1]!='\n') 
+    {
+        HttpErrorStatusUtility::sendBadRequestError(clientSocketDiscriptor); 
+        close(clientSocketDiscriptor);
+        return;
+    }
+    if(requestBuffer[i]=='\r') 
+    {
+        requestBuffer[i]='\0';
+        i=i+2;
+    }
+    else
+    {
+        requestBuffer[i]='\0';
+        i=i+1;
+    }
+    StringUtility::toLowerCase(httpVersion);
+    if(strcmp(httpVersion,"http/1.1")!=0)
+    {
+        HttpErrorStatusUtility::sendHttpVersionNotSupportedError(clientSocketDiscriptor,httpVersion);
+        close(clientSocketDiscriptor);
+    }
+    // code to parse the first line of the http request ends here
+    return;
+    int headerStartIndex=i;
+    i=0;
+    dataInRequest=NULL;
+    while(requestURI[i]!='\0' && requestURI[i]!='?') i++;
+    if(requestURI[i]=='?') 
+    {
+        requestURI[i]='\0';
+        dataInRequest=requestURI+i+1;
+    }
+    cout<<"Request Arrived, URI is : "<<requestURI<<endl;
+    auto urlMappingIterator=bro->urlMappings.find(string(requestURI));
+    if(urlMappingIterator==bro->urlMappings.end())
+    {
+        if(bro->isCHTML(requestURI))
+        {
+            map<string,string> headerFieldsMap;
+            HeaderUtility::parseHeader(requestBuffer+headerStartIndex,headerFieldsMap);
+            Request request(method,requestURI,httpVersion,dataInRequest,headerFieldsMap);
+            bro->processCHTMLResource(clientSocketDiscriptor,requestURI,request);
+        }
+        else if(!bro->serveStaticResource(clientSocketDiscriptor,requestURI))
+        {
+            HttpErrorStatusUtility::sendNotFoundError(clientSocketDiscriptor,requestURI);
+        }
+        close(clientSocketDiscriptor);
+        return;
+    }
+    URLMapping urlMapping=urlMappingIterator->second;
+    if(urlMapping.requestMethod==__GET__ && strcmp(method,"get")!=0)
+    {
+        HttpErrorStatusUtility::sendMethodNotAllowedError(clientSocketDiscriptor,method,requestURI);
+        close(clientSocketDiscriptor);
+        return;
+    }
+    // code to parse the header and then the payload if exists start here
+    map<string,string> headerFieldsMap;
+    HeaderUtility::parseHeader(requestBuffer+headerStartIndex,headerFieldsMap);
+    // code to parse the header and then the payload if exists ends here
+    Request request(method,requestURI,httpVersion,dataInRequest,headerFieldsMap);
+    while(1)
+    {
+        Response response;
+        urlMapping.function->doService(request,response);
+        if(!request.isToBeForwarded())
+        {
+            HTTPResponseUtility::sendResponse(clientSocketDiscriptor,response);
+            break;
+        }
+        string forwardTo=request.forwardToWhichResource();
+        urlMappingIterator=bro->urlMappings.find(forwardTo);
+        if(urlMappingIterator==bro->urlMappings.end())
+        {
+            if(bro->isCHTML(forwardTo.c_str()))
+            {
+                request.forwardTo(string(""));
+                bro->processCHTMLResource(clientSocketDiscriptor,forwardTo.c_str(),request);
+            }
+            else if(!bro->serveStaticResource(clientSocketDiscriptor,forwardTo.c_str()))
+            {
+                HttpErrorStatusUtility::sendNotFoundError(clientSocketDiscriptor,requestURI);
+            } 
+            break;
+        }
+        urlMapping=urlMappingIterator->second;
+        if(urlMapping.requestMethod==__GET__ && strcmp(method,"get")!=0)
+        {
+            HttpErrorStatusUtility::sendMethodNotAllowedError(clientSocketDiscriptor,method,requestURI);
+            break;
+        }
+        // some more if conditions for other request methods
+        request.forwardTo(string(""));
+    }
+    close(clientSocketDiscriptor);
+    // lots of code to be added here for complete functionality
+}
+    
+//__________________________________________________________________//
 
 bool Bro::isCHTML(const char *requestURI)
 {
@@ -261,172 +436,7 @@ void Bro::listen(int portNumber,void (*callBack)(Error &))
     while(1)
     {
         clientSocketDiscriptor=accept(serverSocketDiscriptor,(struct sockaddr *)&clientSocketInformation,&len);
-        requestLength=recv(clientSocketDiscriptor,requestBuffer,sizeof(requestBuffer)-1,0); 
-        if(requestLength==0 || requestLength==-1)
-        {
-            close(clientSocketDiscriptor);
-            continue;
-        }
-        char *method,*requestURI,*httpVersion,*dataInRequest;
-        requestBuffer[requestLength]='\0';
-        cout<<requestBuffer<<endl;
-        // printf("****************\n\n");
-        // printf("%s\n",requestBuffer);
-        // printf("\n\n****************\n\n");
-        // code to parse the first line of the http request starts here
-        // first line format : REQUEST_METHOD SPACE URI SPACE HTTP_VERSION CRLF
-        method=requestBuffer;
-        int i=0;
-        while(requestBuffer[i]!=' ' && requestBuffer[i]) i++;  
-        if(requestBuffer[i]=='\0')
-        {
-            HttpErrorStatusUtility::sendBadRequestError(clientSocketDiscriptor);
-            close(clientSocketDiscriptor);
-            continue;
-        }
-        requestBuffer[i]='\0';
-        i++;
-        if(requestBuffer[i]=='\0' || requestBuffer[i]==' ')
-        {
-            HttpErrorStatusUtility::sendBadRequestError(clientSocketDiscriptor);
-            close(clientSocketDiscriptor);
-            continue;
-        }
-        StringUtility::toLowerCase(method);
-        if(!(strcmp(method,"get")==0 ||
-        strcmp(method,"post")==0 ||
-        strcmp(method,"put")==0 ||
-        strcmp(method,"delete")==0 ||
-        strcmp(method,"connect")==0 ||
-        strcmp(method,"options")==0 ||
-        strcmp(method,"trace")==0 ||
-        strcmp(method,"head")==0))
-        {
-            HttpErrorStatusUtility::sendBadRequestError(clientSocketDiscriptor);
-            close(clientSocketDiscriptor);
-            continue;
-        }
-        requestURI=requestBuffer+i;
-        while(requestBuffer[i]!=' ' && requestBuffer[i]) i++;
-        if(requestBuffer[i]=='\0')
-        {
-            HttpErrorStatusUtility::sendBadRequestError(clientSocketDiscriptor);
-            close(clientSocketDiscriptor);
-            continue;
-        }
-        requestBuffer[i]='\0';
-        i++;
-        if(requestBuffer[i]=='\0' || requestBuffer[i]==' ')
-        {
-            HttpErrorStatusUtility::sendBadRequestError(clientSocketDiscriptor);
-            close(clientSocketDiscriptor);
-            continue;
-        }
-        httpVersion=requestBuffer+i;
-        while(requestBuffer[i]!='\r' && requestBuffer[i]!='\n' && requestBuffer[i]) i++;
-        if(requestBuffer[i]=='\0')
-        {
-            HttpErrorStatusUtility::sendBadRequestError(clientSocketDiscriptor); 
-            close(clientSocketDiscriptor);
-            continue;
-        }
-        if(requestBuffer[i]=='\r' && requestBuffer[i+1]!='\n') 
-        {
-            HttpErrorStatusUtility::sendBadRequestError(clientSocketDiscriptor); 
-            close(clientSocketDiscriptor);
-            continue;
-        }
-        if(requestBuffer[i]=='\r') 
-        {
-            requestBuffer[i]='\0';
-            i=i+2;
-        }
-        else
-        {
-            requestBuffer[i]='\0';
-            i=i+1;
-        }
-        StringUtility::toLowerCase(httpVersion);
-        if(strcmp(httpVersion,"http/1.1")!=0)
-        {
-            HttpErrorStatusUtility::sendHttpVersionNotSupportedError(clientSocketDiscriptor,httpVersion);
-            close(clientSocketDiscriptor);
-            continue;
-        }
-        // code to parse the first line of the http request ends here
-        int headerStartIndex=i;
-        i=0;
-        dataInRequest=NULL;
-        while(requestURI[i]!='\0' && requestURI[i]!='?') i++;
-        if(requestURI[i]=='?') 
-        {
-            requestURI[i]='\0';
-            dataInRequest=requestURI+i+1;
-        }
-        cout<<"Request Arrived, URI is : "<<requestURI<<endl;
-        auto urlMappingIterator=urlMappings.find(string(requestURI));
-        if(urlMappingIterator==urlMappings.end())
-        {
-            if(isCHTML(requestURI))
-            {
-                map<string,string> headerFieldsMap;
-                HeaderUtility::parseHeader(requestBuffer+headerStartIndex,headerFieldsMap);
-                Request request(method,requestURI,httpVersion,dataInRequest,headerFieldsMap);
-                processCHTMLResource(clientSocketDiscriptor,requestURI,request);
-            }
-            else if(!serveStaticResource(clientSocketDiscriptor,requestURI))
-            {
-                HttpErrorStatusUtility::sendNotFoundError(clientSocketDiscriptor,requestURI);
-            }
-            close(clientSocketDiscriptor);
-            continue;
-        }
-        URLMapping urlMapping=urlMappingIterator->second;
-        if(urlMapping.requestMethod==__GET__ && strcmp(method,"get")!=0)
-        {
-            HttpErrorStatusUtility::sendMethodNotAllowedError(clientSocketDiscriptor,method,requestURI);
-            close(clientSocketDiscriptor);
-            continue;
-        }
-        // code to parse the header and then the payload if exists start here
-        map<string,string> headerFieldsMap;
-        HeaderUtility::parseHeader(requestBuffer+headerStartIndex,headerFieldsMap);
-        // code to parse the header and then the payload if exists ends here
-        Request request(method,requestURI,httpVersion,dataInRequest,headerFieldsMap);
-        while(1)
-        {
-            Response response;
-            urlMapping.function->doService(request,response);
-            if(!request.isToBeForwarded())
-            {
-                HTTPResponseUtility::sendResponse(clientSocketDiscriptor,response);
-                break;
-            }
-            string forwardTo=request.forwardToWhichResource();
-            urlMappingIterator=urlMappings.find(forwardTo);
-            if(urlMappingIterator==urlMappings.end())
-            {
-                if(isCHTML(forwardTo.c_str()))
-                {
-                    request.forwardTo(string(""));
-                    processCHTMLResource(clientSocketDiscriptor,forwardTo.c_str(),request);
-                }
-                else if(!serveStaticResource(clientSocketDiscriptor,forwardTo.c_str()))
-                {
-                    HttpErrorStatusUtility::sendNotFoundError(clientSocketDiscriptor,requestURI);
-                } 
-                break;
-            }
-            urlMapping=urlMappingIterator->second;
-            if(urlMapping.requestMethod==__GET__ && strcmp(method,"get")!=0)
-            {
-                HttpErrorStatusUtility::sendMethodNotAllowedError(clientSocketDiscriptor,method,requestURI);
-                break;
-            }
-            // some more if conditions for other request methods
-            request.forwardTo(string(""));
-        }
-        close(clientSocketDiscriptor);
+        new thread(request_processor,clientSocketDiscriptor,this);
         // lots of code to be added here for complete functionality
     } // infinite loops ends
     #ifdef _WIN32

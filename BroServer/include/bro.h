@@ -8,6 +8,7 @@
     #include<bro_startup_function.h>
     #include<bro_startup_function_comparator.h>
     #include<bro_function.h>
+    #include<thread>
 
     class Bro
     {
@@ -30,6 +31,7 @@
             void get(string url,void (*callBack)(Request &,Response &,ApplicationLevelContainer &));
             void post(string url,void (*callBack)(Request &,Response &));
             void listen(int portNumber,void (*callBack)(Error &));    
+            friend void request_processor(int clientSocketDiscriptor,Bro *bro);
     };
 
 #endif
