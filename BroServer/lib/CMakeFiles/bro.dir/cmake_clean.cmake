@@ -37,6 +37,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/bro.dir/bro_string_utility.cpp.o.d"
   "CMakeFiles/bro.dir/bro_template_engine.cpp.o"
   "CMakeFiles/bro.dir/bro_template_engine.cpp.o.d"
+  "CMakeFiles/bro.dir/bro_thread_wrapper_node.cpp.o"
+  "CMakeFiles/bro.dir/bro_thread_wrapper_node.cpp.o.d"
   "CMakeFiles/bro.dir/bro_utilities.cpp.o"
   "CMakeFiles/bro.dir/bro_utilities.cpp.o.d"
   "CMakeFiles/bro.dir/bro_validator.cpp.o"

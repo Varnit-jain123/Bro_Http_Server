@@ -365,4 +365,5 @@ CMakeFiles/bro.dir/bro_template_engine.cpp.o: \
  /home/hp/bro/BroServer/src/../include/bro_container.h \
  /home/hp/bro/BroServer/src/../include/bro_stringifyable.h \
  /home/hp/bro/BroServer/src/../include/bro_utilities.h \
+ /home/hp/bro/BroServer/src/../include/bro_thread_wrapper_node.h \
  /home/hp/bro/BroServer/src/../include/bro_file_system_utility.h

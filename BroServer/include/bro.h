@@ -9,7 +9,7 @@
     #include<bro_startup_function_comparator.h>
     #include<bro_function.h>
     #include<thread>
-
+    #include<bro_thread_wrapper_node.h>
     class Bro
     {
         private:
@@ -31,7 +31,7 @@
             void get(string url,void (*callBack)(Request &,Response &,ApplicationLevelContainer &));
             void post(string url,void (*callBack)(Request &,Response &));
             void listen(int portNumber,void (*callBack)(Error &));    
-            friend void request_processor(int clientSocketDiscriptor,Bro *bro);
+            friend void request_processor(int clientSocketDiscriptor,Bro *bro,BroThreadWrapperNode *broThreadWrapperNode);
     };
 
 #endif

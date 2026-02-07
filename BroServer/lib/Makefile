@@ -585,6 +585,30 @@ bro_template_engine.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bro.dir/build.make CMakeFiles/bro.dir/bro_template_engine.cpp.s
 .PHONY : bro_template_engine.cpp.s
 
+bro_thread_wrapper_node.o: bro_thread_wrapper_node.cpp.o
+.PHONY : bro_thread_wrapper_node.o
+
+# target to build an object file
+bro_thread_wrapper_node.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bro.dir/build.make CMakeFiles/bro.dir/bro_thread_wrapper_node.cpp.o
+.PHONY : bro_thread_wrapper_node.cpp.o
+
+bro_thread_wrapper_node.i: bro_thread_wrapper_node.cpp.i
+.PHONY : bro_thread_wrapper_node.i
+
+# target to preprocess a source file
+bro_thread_wrapper_node.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bro.dir/build.make CMakeFiles/bro.dir/bro_thread_wrapper_node.cpp.i
+.PHONY : bro_thread_wrapper_node.cpp.i
+
+bro_thread_wrapper_node.s: bro_thread_wrapper_node.cpp.s
+.PHONY : bro_thread_wrapper_node.s
+
+# target to generate assembly for a file
+bro_thread_wrapper_node.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bro.dir/build.make CMakeFiles/bro.dir/bro_thread_wrapper_node.cpp.s
+.PHONY : bro_thread_wrapper_node.cpp.s
+
 bro_utilities.o: bro_utilities.cpp.o
 .PHONY : bro_utilities.o
 
@@ -699,6 +723,9 @@ help:
 	@echo "... bro_template_engine.o"
 	@echo "... bro_template_engine.i"
 	@echo "... bro_template_engine.s"
+	@echo "... bro_thread_wrapper_node.o"
+	@echo "... bro_thread_wrapper_node.i"
+	@echo "... bro_thread_wrapper_node.s"
 	@echo "... bro_utilities.o"
 	@echo "... bro_utilities.i"
 	@echo "... bro_utilities.s"

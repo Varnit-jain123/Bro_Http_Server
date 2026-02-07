@@ -365,5 +365,6 @@ CMakeFiles/bro.dir/bro_simple_function.cpp.o: \
  /home/hp/bro/BroServer/src/../include/bro_container.h \
  /home/hp/bro/BroServer/src/../include/bro_stringifyable.h \
  /home/hp/bro/BroServer/src/../include/bro_utilities.h \
+ /home/hp/bro/BroServer/src/../include/bro_thread_wrapper_node.h \
  /home/hp/bro/BroServer/src/../include/bro_response.h \
  /home/hp/bro/BroServer/src/../include/bro_function.h

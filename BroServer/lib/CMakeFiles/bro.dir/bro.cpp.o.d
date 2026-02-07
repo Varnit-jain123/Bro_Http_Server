@@ -363,6 +363,7 @@ CMakeFiles/bro.dir/bro.cpp.o: /home/hp/bro/BroServer/src/bro.cpp \
  /home/hp/bro/BroServer/src/../include/bro_container.h \
  /home/hp/bro/BroServer/src/../include/bro_stringifyable.h \
  /home/hp/bro/BroServer/src/../include/bro_utilities.h \
+ /home/hp/bro/BroServer/src/../include/bro_thread_wrapper_node.h \
  /home/hp/bro/BroServer/src/../include/bro_response.h \
  /home/hp/bro/BroServer/src/../include/bro_error.h \
  /home/hp/bro/BroServer/src/../include/bro_application_level_container.h \

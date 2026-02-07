@@ -349,10 +349,24 @@ CMakeFiles/bro.dir/bro_container.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/bro.dir/bro_container.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/hp/bro/BroServer/src/bro_container.cpp -o CMakeFiles/bro.dir/bro_container.cpp.s
 
+CMakeFiles/bro.dir/bro_thread_wrapper_node.cpp.o: CMakeFiles/bro.dir/flags.make
+CMakeFiles/bro.dir/bro_thread_wrapper_node.cpp.o: /home/hp/bro/BroServer/src/bro_thread_wrapper_node.cpp
+CMakeFiles/bro.dir/bro_thread_wrapper_node.cpp.o: CMakeFiles/bro.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/hp/bro/BroServer/lib/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object CMakeFiles/bro.dir/bro_thread_wrapper_node.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/bro.dir/bro_thread_wrapper_node.cpp.o -MF CMakeFiles/bro.dir/bro_thread_wrapper_node.cpp.o.d -o CMakeFiles/bro.dir/bro_thread_wrapper_node.cpp.o -c /home/hp/bro/BroServer/src/bro_thread_wrapper_node.cpp
+
+CMakeFiles/bro.dir/bro_thread_wrapper_node.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/bro.dir/bro_thread_wrapper_node.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/hp/bro/BroServer/src/bro_thread_wrapper_node.cpp > CMakeFiles/bro.dir/bro_thread_wrapper_node.cpp.i
+
+CMakeFiles/bro.dir/bro_thread_wrapper_node.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/bro.dir/bro_thread_wrapper_node.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/hp/bro/BroServer/src/bro_thread_wrapper_node.cpp -o CMakeFiles/bro.dir/bro_thread_wrapper_node.cpp.s
+
 CMakeFiles/bro.dir/bro.cpp.o: CMakeFiles/bro.dir/flags.make
 CMakeFiles/bro.dir/bro.cpp.o: /home/hp/bro/BroServer/src/bro.cpp
 CMakeFiles/bro.dir/bro.cpp.o: CMakeFiles/bro.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/hp/bro/BroServer/lib/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object CMakeFiles/bro.dir/bro.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/hp/bro/BroServer/lib/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object CMakeFiles/bro.dir/bro.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/bro.dir/bro.cpp.o -MF CMakeFiles/bro.dir/bro.cpp.o.d -o CMakeFiles/bro.dir/bro.cpp.o -c /home/hp/bro/BroServer/src/bro.cpp
 
 CMakeFiles/bro.dir/bro.cpp.i: cmake_force
@@ -385,6 +399,7 @@ bro_OBJECTS = \
 "CMakeFiles/bro.dir/bro_startup_function_comparator.cpp.o" \
 "CMakeFiles/bro.dir/bro_template_engine.cpp.o" \
 "CMakeFiles/bro.dir/bro_container.cpp.o" \
+"CMakeFiles/bro.dir/bro_thread_wrapper_node.cpp.o" \
 "CMakeFiles/bro.dir/bro.cpp.o"
 
 # External object files for target bro
@@ -410,10 +425,11 @@ libbro.a: CMakeFiles/bro.dir/bro_application_level_Container_Dependent_Startup_F
 libbro.a: CMakeFiles/bro.dir/bro_startup_function_comparator.cpp.o
 libbro.a: CMakeFiles/bro.dir/bro_template_engine.cpp.o
 libbro.a: CMakeFiles/bro.dir/bro_container.cpp.o
+libbro.a: CMakeFiles/bro.dir/bro_thread_wrapper_node.cpp.o
 libbro.a: CMakeFiles/bro.dir/bro.cpp.o
 libbro.a: CMakeFiles/bro.dir/build.make
 libbro.a: CMakeFiles/bro.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/hp/bro/BroServer/lib/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Linking CXX static library libbro.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/hp/bro/BroServer/lib/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Linking CXX static library libbro.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/bro.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/bro.dir/link.txt --verbose=$(VERBOSE)
 

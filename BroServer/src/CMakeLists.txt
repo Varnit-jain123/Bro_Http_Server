@@ -21,5 +21,6 @@ add_library(bro bro_global.cpp
             bro_startup_function_comparator.cpp
             bro_template_engine.cpp
             bro_container.cpp
+            bro_thread_wrapper_node.cpp
             bro.cpp
             )

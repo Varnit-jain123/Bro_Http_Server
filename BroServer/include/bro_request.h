@@ -5,6 +5,7 @@
     #include<bro_container.h>
     #include<bro_stringifyable.h>
     #include<bro_utilities.h>
+    #include<bro_thread_wrapper_node.h>
     class Bro;
     class Request:public Container
     {
@@ -46,6 +47,6 @@
     void getCookies(list<Cookie> &cookies);
     void getCookieNames(list<string> &cookieName);
     friend class Bro;
-    friend void request_processor(int clientSocketDiscriptor,Bro *bro);
+    friend void request_processor(int clientSocketDiscriptor,Bro *bro,BroThreadWrapperNode *broThreadWrapperNode);
     };
 #endif

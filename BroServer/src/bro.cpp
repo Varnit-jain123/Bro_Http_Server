@@ -12,7 +12,7 @@
 #include<bro_string_utility.h>
 #include<bro_http_response_utility.h>
 
-void request_processor(int clientSocketDiscriptor,Bro *bro)
+void request_processor(int clientSocketDiscriptor,Bro *bro,BroThreadWrapperNode *broThreadWrapperNode)
 {
     char requestBuffer[4097]; // one extra byte for null termination
     int requestLength;
@@ -21,6 +21,7 @@ void request_processor(int clientSocketDiscriptor,Bro *bro)
     if(requestLength==0 || requestLength==-1)
     {
         close(clientSocketDiscriptor);
+        broThreadWrapperNode->setCompletedStatus(true);
         return;
     }
     char *method,*requestURI,*httpVersion,*dataInRequest;
@@ -38,6 +39,7 @@ void request_processor(int clientSocketDiscriptor,Bro *bro)
     {
         HttpErrorStatusUtility::sendBadRequestError(clientSocketDiscriptor);
         close(clientSocketDiscriptor);
+        broThreadWrapperNode->setCompletedStatus(true);
         return;
     }
     requestBuffer[i]='\0';
@@ -46,6 +48,7 @@ void request_processor(int clientSocketDiscriptor,Bro *bro)
     {
         HttpErrorStatusUtility::sendBadRequestError(clientSocketDiscriptor);
         close(clientSocketDiscriptor);
+        broThreadWrapperNode->setCompletedStatus(true);
         return;
     }
     StringUtility::toLowerCase(method);
@@ -60,6 +63,7 @@ void request_processor(int clientSocketDiscriptor,Bro *bro)
     {
         HttpErrorStatusUtility::sendBadRequestError(clientSocketDiscriptor);
         close(clientSocketDiscriptor);
+        broThreadWrapperNode->setCompletedStatus(true);
         return;
     }
     requestURI=requestBuffer+i;
@@ -68,6 +72,7 @@ void request_processor(int clientSocketDiscriptor,Bro *bro)
     {
         HttpErrorStatusUtility::sendBadRequestError(clientSocketDiscriptor);
         close(clientSocketDiscriptor);
+        broThreadWrapperNode->setCompletedStatus(true);
         return;
     }
     requestBuffer[i]='\0';
@@ -76,6 +81,7 @@ void request_processor(int clientSocketDiscriptor,Bro *bro)
     {
         HttpErrorStatusUtility::sendBadRequestError(clientSocketDiscriptor);
         close(clientSocketDiscriptor);
+        broThreadWrapperNode->setCompletedStatus(true);
         return;
     }
     httpVersion=requestBuffer+i;
@@ -84,12 +90,14 @@ void request_processor(int clientSocketDiscriptor,Bro *bro)
     {
         HttpErrorStatusUtility::sendBadRequestError(clientSocketDiscriptor); 
         close(clientSocketDiscriptor);
+        broThreadWrapperNode->setCompletedStatus(true);
         return;
     }
     if(requestBuffer[i]=='\r' && requestBuffer[i+1]!='\n') 
     {
         HttpErrorStatusUtility::sendBadRequestError(clientSocketDiscriptor); 
         close(clientSocketDiscriptor);
+        broThreadWrapperNode->setCompletedStatus(true);
         return;
     }
     if(requestBuffer[i]=='\r') 
@@ -107,9 +115,10 @@ void request_processor(int clientSocketDiscriptor,Bro *bro)
     {
         HttpErrorStatusUtility::sendHttpVersionNotSupportedError(clientSocketDiscriptor,httpVersion);
         close(clientSocketDiscriptor);
+        broThreadWrapperNode->setCompletedStatus(true);
+        return;
     }
     // code to parse the first line of the http request ends here
-    return;
     int headerStartIndex=i;
     i=0;
     dataInRequest=NULL;
@@ -135,6 +144,7 @@ void request_processor(int clientSocketDiscriptor,Bro *bro)
             HttpErrorStatusUtility::sendNotFoundError(clientSocketDiscriptor,requestURI);
         }
         close(clientSocketDiscriptor);
+        broThreadWrapperNode->setCompletedStatus(true);
         return;
     }
     URLMapping urlMapping=urlMappingIterator->second;
@@ -142,6 +152,7 @@ void request_processor(int clientSocketDiscriptor,Bro *bro)
     {
         HttpErrorStatusUtility::sendMethodNotAllowedError(clientSocketDiscriptor,method,requestURI);
         close(clientSocketDiscriptor);
+        broThreadWrapperNode->setCompletedStatus(true);
         return;
     }
     // code to parse the header and then the payload if exists start here
@@ -183,6 +194,7 @@ void request_processor(int clientSocketDiscriptor,Bro *bro)
         request.forwardTo(string(""));
     }
     close(clientSocketDiscriptor);
+    broThreadWrapperNode->setCompletedStatus(true);
     // lots of code to be added here for complete functionality
 }
     
@@ -377,6 +389,7 @@ void Bro::listen(int portNumber,void (*callBack)(Error &))
     char requestBuffer[4097]; // one extra byte for null termination
     int requestLength;
     int x;
+    BroThreadWrapperNode *top,*p1,*p2;
     serverSocketDiscriptor=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
     if(serverSocketDiscriptor<0)
     {
@@ -387,6 +400,7 @@ void Bro::listen(int portNumber,void (*callBack)(Error &))
         callBack(error);
         return;
     }
+    top=NULL;
     struct sockaddr_in serversocketInformation;   
     serversocketInformation.sin_family=AF_INET;
     serversocketInformation.sin_port=htons(portNumber);
@@ -433,12 +447,77 @@ void Bro::listen(int portNumber,void (*callBack)(Error &))
         int len=sizeof(clientSocketInformation);
     #endif
     int clientSocketDiscriptor;
+    thread *t;
     while(1)
     {
+        cout<<"Scanning of data structure starts here"<<endl;
+        p1=top;
+        while(p1!=NULL)
+        {
+            if(p1->isComplete())
+            {
+                p1->th->join();
+                if(p1==top)
+                {
+                    top=top->next;
+                    delete p1->th;
+                    delete p1;
+                    p1=top;
+                    continue;
+                }
+                else
+                {
+                    p2->next=p1->next;
+                    delete p1->th;
+                    delete p1;
+                    p1=p2->next;
+                    continue;
+                }
+            }
+            p2=p1;
+            p1=p1->next;
+        }
+        cout<<"Scanning of data structure ends here"<<endl;
         clientSocketDiscriptor=accept(serverSocketDiscriptor,(struct sockaddr *)&clientSocketInformation,&len);
-        new thread(request_processor,clientSocketDiscriptor,this);
+        p1=new BroThreadWrapperNode;
+        t=new thread(request_processor,clientSocketDiscriptor,this,p1);
+        p1->th=t;
+        p1->next=top;
+        top=p1;
         // lots of code to be added here for complete functionality
     } // infinite loops ends
+
+    // when the server shuts down ,the control reaches this line
+    while(top!=NULL)
+    {
+        p1=top;
+        while(p1!=NULL)
+        {
+            if(p1->isComplete())
+            {
+                p1->th->join();
+                if(p1==top)
+                {
+                    top=top->next;
+                    delete p1->th;
+                    delete p1;
+                    p1=top;
+                    continue;
+                }
+                else
+                {
+                    p2->next=p1->next;
+                    delete p1->th;
+                    delete p1;
+                    p1=p2->next;
+                    continue;
+                }
+            }
+            p2=p1;
+            p1=p1->next;
+        }
+    }
+    cout<<"The waits ends and the story ends here"<<endl;
     #ifdef _WIN32
         WSACleanup();
     #endif
