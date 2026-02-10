@@ -112,23 +112,63 @@ Here's what makes this framework valuable for education:
 
 ## Project Structure
 
+
 ```
-bro-http-server/
-├── include/
-│   └── bro.h                    # Main framework header
-├── lib/
-│   └── libbro.a                 # Compiled library
-├── src/
-│   └── bobby.cpp                # Example application
-├── data/
-│   └── sofd.data                # Sample data file
-├── static/
-│   ├── index.html               # Static web pages
-│   ├── WordsOfWisdom.chtml      # CHTML templates
-│   └── somethingCool.html       # Example static files
-├── docs/
-│   └── API.md                   # API documentation
-└── README.md                    # This file
+Bro/                            # Root project directory
+├── BroServer/                  # Main server implementation
+│   ├── bobby/                  # Example application
+│   │   ├── bro-data/           # Framework data files
+│   │   │   └── mime.types      # MIME type mappings
+│   │   ├── data/               # Application data
+│   │   │   └── sofd.data       # Sample data file
+│   │   ├── vtml_files/         # Template files
+│   │   │   └── WordsOfWisdom.chtml
+│   │   ├── Whatever/           # Static resources folder
+|   |   |   ├── index.html
+│   │   |   ├── somethingCool.html
+|   |   |   ├── test1.html
+|   |   |   ├── test2.html 
+│   │   ├── bobby.out           # Compiled server executable
+|   |   ├── bobby.cpp 
+│   │
+│   ├── include/                # Header files
+│   │   ├── bro_application_level_Container_Dependent_Function.h
+│   │   ├── bro_application_level_Container_Dependent_Startup_Function.h
+│   │   ├── bro_application_level_container.h
+│   │   ├── bro_constants.h
+│   │   ├── bro_cookies.h
+│   │   ├── bro_error.h
+│   │   ├── bro_file_system_utility.h
+│   │   ├── bro_function.h
+│   │   ├── bro.h               # Main framework header
+│   │   ├── bro_html_date_time.h
+│   │   ├── bro_header_utility.h
+│   │   ├── bro_http_error_status_utility.h
+│   │   ├── bro_http_response_utility.h
+│   │   ├── bro_request.h
+│   │   ├── bro_response.h
+│   │   ├── bro_simple_function.h
+│   │   ├── bro_simple_startup_function.h
+│   │   ├── bro_startup_function_comparator.h
+│   │   ├── bro_startup_function.h
+│   │   ├── bro_string_utility.h
+│   │   ├── bro_stringifyable.h
+│   │   ├── bro_template_engine.h
+│   │   ├── bro_thread_wrapper_node.h
+│   │   ├── bro_utilities.h
+│   │   └── bro_validator.h
+│   │
+│   ├── lib/                    # Compiled library
+│   │   └── libbro.a           # Static library (generated)
+│   │
+│   └── src/                    # Source files
+│       ├── bro.cpp            # Core framework implementation
+│       ├── shutdown_script    # Shutdown utility script
+|       ├── CMakeLists.txt     # CMake build configuration
+│       └── [other .cpp files] # Framework implementation files
+│
+├── Learn/                      # Learning materials/
+└── README.md                   # This file
 ```
 
 ## Getting Started
@@ -149,7 +189,7 @@ Let's get this thing running! Here's how:
 **1. Grab the code**
    ```bash
    git clone https://github.com/Varnit-jain123/Bro_Http_Server.git
-   cd broServer
+   cd BroServer
    ```
 
 **2. Compile the example application** (this is where the magic happens)
