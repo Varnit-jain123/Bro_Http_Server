@@ -6,7 +6,6 @@
 ![Multithreaded](https://img.shields.io/badge/Multithreaded-Architecture-green?style=for-the-badge)
 ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
 ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
-![License](https://img.shields.io/badge/License-Educational-blue?style=for-the-badge)
 
 **A lightweight, multithreaded C++ web framework built for learning**
 
