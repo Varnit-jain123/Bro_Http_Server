@@ -148,20 +148,13 @@ Let's get this thing running! Here's how:
 
 **1. Grab the code**
    ```bash
-   git clone https://github.com/yourusername/bro-http-server.git
-   cd bro-http-server
+   git clone https://github.com/Varnit-jain123/Bro_Http_Server.git
+   cd broServer
    ```
 
-**2. Build the framework library** (skip this if you already have `libbro.a`)
+**2. Compile the example application** (this is where the magic happens)
    ```bash
-   cd src
-   g++ -c bro.cpp -o bro.o -I ../include/ -pthread -std=c++11
-   ar rcs ../lib/libbro.a bro.o
-   ```
-
-**3. Compile the example application** (this is where the magic happens)
-   ```bash
-   g++ bobby.cpp -o bobby.out -I ../include/ -L ../lib/ -lbro -pthread
+   g++ bobby.cpp -o bobby.out -I ../include/ -L ../lib/ -lbro 
    ```
 
 That's it! You've just built a web server from scratch.
@@ -205,19 +198,29 @@ Congratulations! You're now running your own web server.
 
 ### Stopping the Server
 
-When you're done experimenting:
+You have two ways to gracefully shut down the server:
 
-- **On Linux/Mac**: Just hit `Ctrl+C` in your terminal
-- **On Windows**: Press `Ctrl+C` or close the window
+**Option 1: Using the Shutdown Utility (Recommended)**
 
-The server won't just crash. It will:
+The server comes with a dedicated shutdown utility:
+
+```bash
+./shutdown          # Shuts down server on default port 6060
+```
+
+This sends a special `/shutdown` request that triggers graceful shutdown. The server will:
 1. Stop accepting new visitors
 2. Finish up with anyone currently connected
-3. Clean up all its resources properly
+3. Clean up all resources properly
 4. Shut down worker threads gracefully
 5. Release everything cleanly
 
-This is what we call a "graceful shutdown" - important stuff for real-world applications!
+**Option 2: Manual Interrupt**
+
+- **On Linux/Mac**: Hit `Ctrl+C` in your terminal
+- **On Windows**: Press `Ctrl+C` or close the window
+
+Both methods ensure a proper shutdown - no crashed connections, no leaked resources, no orphaned threads!
 
 ## Documentation
 
@@ -632,23 +635,13 @@ and personal learning purposes free of charge.
 Commercial use requires explicit written permission from the copyright holders.
 ```
 
-## A Few Thanks
-
-This project exists because:
-- Someone needed to demystify web servers for students
-- Frameworks like Flask and Express.js showed us that simple can be powerful
-- We all struggled to understand HTTP once, and hands-on code helped
-- Learning by building is the best way to really *get* something
-
-Special shout-out to every student who'll use this to finally understand what's happening when they hit Enter in their browser.
-
 ## Need Help?
 
 Stuck? Confused? Found a bug?
 
-- **Bug reports & feature ideas**: [Open an issue](https://github.com/yourusername/bro-http-server/issues)
-- **Questions & discussions**: [Start a discussion](https://github.com/yourusername/bro-http-server/discussions)  
-- **Email**: support@broserver.dev
+- **Bug reports & feature ideas**: [Open an issue](https://github.com/Varnit-jain123/Bro_Http_Server/issues)
+- **Questions & discussions**: [Start a discussion](https://github.com/Varnit-jain123/Bro_Http_Server/discussions)  
+- **Email**: varnitjaintj@gmail.com
 
 Don't be shy! We're here to help you learn.
 
