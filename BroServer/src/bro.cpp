@@ -129,6 +129,14 @@ void request_processor(int clientSocketDiscriptor,Bro *bro,BroThreadWrapperNode 
         dataInRequest=requestURI+i+1;
     }
     cout<<"Request Arrived, URI is : "<<requestURI<<endl;
+    cout<<endl;
+    if(strcmp(requestURI,"/shutdown")==0)
+    {
+        Bro::keep_running=false;
+        close(clientSocketDiscriptor);
+        broThreadWrapperNode->setCompletedStatus(true);
+        return;
+    }
     auto urlMappingIterator=bro->urlMappings.find(string(requestURI));
     if(urlMappingIterator==bro->urlMappings.end())
     {
@@ -199,6 +207,7 @@ void request_processor(int clientSocketDiscriptor,Bro *bro,BroThreadWrapperNode 
 }
     
 //__________________________________________________________________//
+bool Bro::keep_running=true;
 
 bool Bro::isCHTML(const char *requestURI)
 {
@@ -448,7 +457,7 @@ void Bro::listen(int portNumber,void (*callBack)(Error &))
     #endif
     int clientSocketDiscriptor;
     thread *t;
-    while(1)
+    while(Bro::keep_running==true)
     {
         cout<<"Scanning of data structure starts here"<<endl;
         p1=top;
@@ -486,8 +495,8 @@ void Bro::listen(int portNumber,void (*callBack)(Error &))
         top=p1;
         // lots of code to be added here for complete functionality
     } // infinite loops ends
-
     // when the server shuts down ,the control reaches this line
+    cout<<"Waiting for all threads to complete"<<endl;
     while(top!=NULL)
     {
         p1=top;
@@ -518,6 +527,7 @@ void Bro::listen(int portNumber,void (*callBack)(Error &))
         }
     }
     cout<<"The waits ends and the story ends here"<<endl;
+    close(serverSocketDiscriptor);
     #ifdef _WIN32
         WSACleanup();
     #endif
