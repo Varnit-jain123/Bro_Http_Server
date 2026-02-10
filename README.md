@@ -649,7 +649,7 @@ Don't be shy! We're here to help you learn.
 
 <div align="center">
 
-**Built with ❤️ for curious minds everywhere**
+**Bro HTTP Server — designed and engineered by Varnit Jain for those who dare to build from scratch.**
 
 *Because understanding how things work is always better than just using them*
 
