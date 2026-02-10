@@ -640,7 +640,6 @@ Commercial use requires explicit written permission from the copyright holders.
 Stuck? Confused? Found a bug?
 
 - **Bug reports & feature ideas**: [Open an issue](https://github.com/Varnit-jain123/Bro_Http_Server/issues)
-- **Questions & discussions**: [Start a discussion](https://github.com/Varnit-jain123/Bro_Http_Server/discussions)  
 - **Email**: varnitjaintj@gmail.com
 
 Don't be shy! We're here to help you learn.
