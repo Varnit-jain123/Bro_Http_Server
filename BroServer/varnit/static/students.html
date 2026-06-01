@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduBase - Students</title>
+<link rel="stylesheet" href="/style.css">
+<script>
+</script>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-brand">🎓 EduBase</div>
+  <ul class="nav-links">
+    <li><a href="/index.html">Home</a></li>
+    <li><a href="/students.html" class="active">Students</a></li>
+    <li><a href="/faculty.html">Faculty</a></li>
+  </ul>
+</nav>
+
+<div class="page-header">
+  <h1>👨‍🎓 Student Records</h1>
+</div>
+
+<div class="content">
+
+  <!-- Message box (shown after add/delete) -->
+  <div id="msg-box" style="display:none"></div>
+
+  <!-- Add Student Form -->
+  <div class="form-card">
+    <h2>➕ Add New Student</h2>
+    <form id="add-student-form">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" name="name" id="s-name" placeholder="e.g. Varnit Jain" required>
+        </div>
+        <div class="form-group">
+          <label>Roll Number</label>
+          <input type="text" name="roll" id="s-roll" placeholder="e.g. CS2024001" required>
+        </div>
+        <div class="form-group">
+          <label>Branch</label>
+          <select name="branch" id="s-branch">
+            <option>Computer Science</option>
+            <option>Electronics</option>
+            <option>Mechanical</option>
+            <option>Civil</option>
+            <option>Information Technology</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Year</label>
+          <select name="year" id="s-year">
+            <option>1st Year</option>
+            <option>2nd Year</option>
+            <option>3rd Year</option>
+            <option>4th Year</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" name="email" id="s-email" placeholder="student@college.edu">
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="text" name="phone" id="s-phone" placeholder="9876543210">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Add Student</button>
+        <button type="reset" class="btn btn-secondary">Clear</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Students Table -->
+  <div class="table-card">
+    <h2>All Students</h2>
+    <div id="students-table-container">
+      <div class="empty-state"><div class="empty-icon">⏳</div>Loading...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showMsg(text, type) {
+  const box = document.getElementById('msg-box');
+  box.className = 'alert alert-' + type;
+  box.textContent = text;
+  box.style.display = 'block';
+  setTimeout(() => box.style.display = 'none', 3000);
+}
+
+function loadStudents() {
+  fetch('/api/students')
+    .then(r => r.json())
+    .then(data => {
+      const c = document.getElementById('students-table-container');
+      if (!data.length) {
+        c.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div>No students found. Add one above!</div>';
+        return;
+      }
+      let html = '<table><thead><tr><th>#</th><th>Name</th><th>Roll No.</th><th>Branch</th><th>Year</th><th>Email</th><th>Phone</th><th>Action</th></tr></thead><tbody>';
+      data.forEach((s, i) => {
+        html += `<tr>
+          <td>${i+1}</td>
+          <td><strong>${s.name}</strong></td>
+          <td><span class="badge badge-blue">${s.roll}</span></td>
+          <td>${s.branch}</td>
+          <td><span class="badge badge-green">${s.year}</span></td>
+          <td>${s.email || '—'}</td>
+          <td>${s.phone || '—'}</td>
+          <td><button class="btn btn-danger" onclick="deleteStudent(${s.id})">🗑 Delete</button></td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      c.innerHTML = html;
+    })
+    .catch(() => {
+      document.getElementById('students-table-container').innerHTML =
+        '<div class="empty-state"><div class="empty-icon">❌</div>Could not load students. Is the server running with MySQL?</div>';
+    });
+}
+
+function deleteStudent(id) {
+  if (!confirm('Delete this student?')) return;
+  fetch('/api/delete_student', {
+    method: 'POST',
+    body: new URLSearchParams({ id: id })
+  })
+  .then(r => r.json())
+  .then(d => { showMsg(d.message, d.status); loadStudents(); });
+}
+
+document.getElementById('add-student-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const params = new URLSearchParams({
+    name:   document.getElementById('s-name').value,
+    roll:   document.getElementById('s-roll').value,
+    branch: document.getElementById('s-branch').value,
+    year:   document.getElementById('s-year').value,
+    email:  document.getElementById('s-email').value,
+    phone:  document.getElementById('s-phone').value,
+  });
+  fetch('/api/add_student', {
+    method: 'POST',
+    body: params
+  })
+    .then(r => r.json())
+    .then(d => { showMsg(d.message, d.status); if(d.status==='success') { this.reset(); loadStudents(); }});
+});
+
+loadStudents();
+</script>
+</body>
+</html>

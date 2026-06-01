@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Report — EduBase</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .report-box { background: rgba(108,99,255,0.1); border: 1px solid var(--primary); padding: 2rem; border-radius: 12px; margin-top: 2rem; text-align: center; }
+  .report-box h2 { color: var(--primary); font-size: 2.5rem; margin-bottom: 1rem; }
+  .metric { display: flex; justify-content: space-between; padding: 1rem; border-bottom: 1px solid var(--border); font-size: 1.1rem; }
+  .metric:last-child { border-bottom: none; }
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-brand">🎓 EduBase</div>
+  <ul class="nav-links">
+    <li><a href="/index.html">Home</a></li>
+    <li><a href="/students.html">Students</a></li>
+    <li><a href="/faculty.html">Faculty</a></li>
+    <li><a href="/report">Live Report</a></li>
+  </ul>
+</nav>
+
+<div class="content">
+  <div class="page-header" style="padding-left:0; padding-right:0;">
+    <h1>📈 Live Server Report</h1>
+  </div>
+  
+  <div class="alert alert-success" style="margin-top:1rem;">
+    This page was generated on the server using Bro Framework's <b>.chtml</b> rendering engine!
+  </div>
+
+  <div class="report-box">
+    <h2>EduBase System Status</h2>
+    <div class="metric">
+      <span>Total Registered Students:</span>
+      <strong>${total_students}</strong>
+    </div>
+    <div class="metric">
+      <span>Total Registered Faculty:</span>
+      <strong>${total_faculty}</strong>
+    </div>
+    <div class="metric">
+      <span>Total API Requests Handled:</span>
+      <strong>${visit_count}</strong>
+    </div>
+    <div class="metric">
+      <span>Database Status:</span>
+      <strong style="color: var(--success);">${db_status}</strong>
+    </div>
+  </div>
+</div>
+</body>
+</html>

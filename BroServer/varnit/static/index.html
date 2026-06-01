@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduBase — Student & Faculty Management</title>
+<link rel="stylesheet" href="/style.css">
+<script>
+</script>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-brand">🎓 EduBase</div>
+  <ul class="nav-links">
+    <li><a href="/index.html" class="active">Home</a></li>
+    <li><a href="/students.html">Students</a></li>
+    <li><a href="/faculty.html">Faculty</a></li>
+  </ul>
+</nav>
+
+<div class="hero">
+  <div class="hero-content">
+    <h1>EduBase Management System</h1>
+    <p>A complete Student &amp; Faculty records portal powered by Bro HTTP Server + MySQL</p>
+    <div class="hero-buttons">
+      <a href="/students.html" class="btn btn-primary">📚 Manage Students</a>
+      <a href="/faculty.html" class="btn btn-secondary">👨‍🏫 Manage Faculty</a>
+    </div>
+  </div>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card" id="stat-students">
+    <div class="stat-icon">👨‍🎓</div>
+    <div class="stat-number" id="student-count">—</div>
+    <div class="stat-label">Total Students</div>
+  </div>
+  <div class="stat-card" id="stat-faculty">
+    <div class="stat-icon">👩‍🏫</div>
+    <div class="stat-number" id="faculty-count">—</div>
+    <div class="stat-label">Total Faculty</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">🏫</div>
+    <div class="stat-number">1</div>
+    <div class="stat-label">Institution</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">⚡</div>
+    <div class="stat-number">C++</div>
+    <div class="stat-label">Powered By</div>
+  </div>
+</div>
+
+<script>
+  fetch('/api/stats').then(r=>r.json()).then(d=>{
+    document.getElementById('student-count').textContent = d.students;
+    document.getElementById('faculty-count').textContent = d.faculty;
+  }).catch(()=>{});
+</script>
+</body>
+</html>

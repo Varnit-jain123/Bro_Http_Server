@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — EduBase</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">🎓 EduBase</div>
+    <ul class="nav-links">
+      <li><a href="/index.html">Home</a></li>
+    </ul>
+  </nav>
+
+  <div class="content" style="max-width: 400px; margin-top: 4rem;">
+    <div id="msg-box" style="display:none"></div>
+
+    <div class="form-card">
+      <h2 style="text-align: center;">Admin Login</h2>
+      <form id="login-form">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label>Password</label>
+          <input type="password" name="password" id="l-pwd" placeholder="Enter admin123" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function showMsg(text, type) {
+      const box = document.getElementById('msg-box');
+      box.className = 'alert alert-' + type;
+      box.textContent = text;
+      box.style.display = 'block';
+      setTimeout(() => box.style.display = 'none', 3000);
+    }
+
+    document.getElementById('login-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const params = new URLSearchParams({
+        password: document.getElementById('l-pwd').value
+      });
+
+      fetch('/api/login', {
+        method: 'POST',
+        body: params
+      })
+        .then(r => r.json())
+        .then(d => {
+          showMsg(d.message, d.status);
+          if (d.status === 'success') {
+            // Set the cookie globally so the browser sends it everywhere
+            document.cookie = "auth_session=admin_token_123; path=/";
+            setTimeout(() => window.location.href = '/students.html', 1000);
+          }
+        });
+    });
+  </script>
+</body>
+
+</html>

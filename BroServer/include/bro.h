@@ -20,6 +20,7 @@
             priority_queue<StartupFunction *,vector<StartupFunction *>,StartupFunctionComparator> startupFunctions;
             bool isCHTML(const char *requestURI);
             static bool keep_running;
+            int serverSocketDescriptor;
         public:
             Bro();
             ~Bro();

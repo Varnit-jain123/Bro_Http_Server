@@ -61,7 +61,7 @@ void BroUtilities::loadMIMETypes(map<string,string> &mimeTypesMap)
     {
         fgets(line,200,file);
         if(feof(file)) break;
-        if(line[0]=='#') continue;
+        if(line[0]=='#' || line[0]=='\r' || line[0]=='\n' || line[0]=='\0') continue;
         x=strlen(line)-1;
         while(1) // logic to remove '\r' and '\n' from end of string
         {

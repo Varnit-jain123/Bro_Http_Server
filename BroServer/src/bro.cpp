@@ -133,6 +133,12 @@ void request_processor(int clientSocketDiscriptor,Bro *bro,BroThreadWrapperNode 
     if(strcmp(requestURI,"/shutdown")==0)
     {
         Bro::keep_running=false;
+        // Close the server socket to unblock accept() on the main thread
+        #ifdef _WIN32
+            closesocket(bro->serverSocketDescriptor);
+        #else
+            close(bro->serverSocketDescriptor);
+        #endif
         close(clientSocketDiscriptor);
         broThreadWrapperNode->setCompletedStatus(true);
         return;
@@ -408,6 +414,7 @@ void Bro::listen(int portNumber,void (*callBack)(Error &))
     int x;
     BroThreadWrapperNode *top,*p1,*p2;
     serverSocketDiscriptor=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
+    this->serverSocketDescriptor=serverSocketDiscriptor;
     if(serverSocketDiscriptor<0)
     {
         #ifdef _WIN32
@@ -496,6 +503,11 @@ void Bro::listen(int portNumber,void (*callBack)(Error &))
         }
         cout<<"Scanning of data structure ends here"<<endl;
         clientSocketDiscriptor=accept(serverSocketDiscriptor,(struct sockaddr *)&clientSocketInformation,&len);
+        if(clientSocketDiscriptor<0)
+        {
+            // accept() may fail when the socket is closed during shutdown
+            break;
+        }
         p1=new BroThreadWrapperNode;
         t=new thread(request_processor,clientSocketDiscriptor,this,p1);
         p1->th=t;

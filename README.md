@@ -225,6 +225,82 @@ Let's get this thing running! Here's how:
 
 That's it! You've just built a web server from scratch.
 
+---
+
+### 🚀 For Users: Create and Run Your Own Project
+
+Already have the library built? Here's how to write and run your **own** application using BroServer in just 3 steps:
+
+**Step 1: Create your project folder inside `BroServer/`**
+   ```bash
+   mkdir BroServer/myapp
+   cd BroServer/myapp
+   ```
+
+**Step 2: Write your app (e.g. `myapp.cpp`)**
+   ```cpp
+   #include <bro.h>
+
+   int main() {
+       try {
+           Bro bro;
+           bro.setStaticResourceFolder("static");
+
+           bro.get("/hello", [](Request &request, Response &response) {
+               response.setContentType("text/html");
+               response << "<h1>Hello from my Bro app!</h1>";
+           });
+
+           bro.listen(6060, [](Error &error) {
+               if (!error.hasError())
+                   cout << "Server is running on port 6060\n";
+               else
+                   cout << "Error: " << error.getError() << endl;
+           });
+       } catch (string exception) {
+           cout << exception << endl;
+       }
+       return 0;
+   }
+   ```
+
+**Step 3: Compile and run**
+   ```bash
+   # On Linux
+   g++ myapp.cpp -o myapp.out -I ../include/ -L ../lib/ -lbro
+   ./myapp.out
+
+   # On Windows (MinGW)
+   g++ myapp.cpp -o myapp.exe -I ../include/ -L ../lib/ -lbro -lws2_32 -static
+   .\myapp.exe
+   ```
+
+   Then open your browser and visit: `http://localhost:6060/hello`
+
+> 💡 **Tip:** Make sure `bro-data/mime.types` is present in your project folder (you can copy it from `bobby/bro-data/`). The server needs it to detect file types when serving static content.
+
+---
+
+### 🎓 Advanced Example: EduBase (MySQL Integration & CHTML)
+
+The repository also includes `varnit`, a fully featured Student & Faculty Management System built using the Bro framework. It demonstrates advanced capabilities:
+
+- **MySQL Integration**: Direct database connection and querying from C++.
+- **REST APIs**: `GET` and `POST` endpoints for CRUD operations.
+- **Dynamic CHTML Pages**: Live server rendering with injected variables (e.g. `/report`).
+- **Global Application State**: Using `ApplicationLevelContainer` to track total server visits across all users.
+
+To run the EduBase example (Windows):
+1. Ensure MySQL Server 8.0 is installed and your database is configured.
+2. Navigate to the `varnit` directory and compile:
+   ```bash
+   cd varnit
+   g++ varnit.cpp -o varnit.exe -I ../include/ -L ../lib/ -lbro -lws2_32 -L "C:/Program Files/MySQL/MySQL Server 8.0/lib" -lmysql -I "C:/Program Files/MySQL/MySQL Server 8.0/include" -static-libgcc -static-libstdc++
+   ```
+3. Run the server (`.\varnit.exe`) and visit `http://localhost:6060/index.html`.
+
+---
+
 ### Running Your Server
 
 Time to see it in action:
@@ -272,10 +348,26 @@ You have two ways to gracefully shut down the server:
 
 **Option 1: Using the Shutdown Utility (Recommended)**
 
-The server comes with a dedicated shutdown utility:
+The server comes with a dedicated shutdown utility located in `BroServer/shutdown_script/`. You need to compile it once first:
 
 ```bash
-./shutdown          # Shuts down server on default port 6060
+cd shutdown_script
+
+# On Linux
+g++ shutdown_bro.cpp -o shutdown_bro.out
+
+# On Windows (MinGW)
+g++ shutdown_bro.cpp -o shutdown_bro.exe -lws2_32 -static
+```
+
+Then run it while the server is running:
+
+```bash
+# On Linux
+./shutdown_bro.out
+
+# On Windows
+.\shutdown_bro.exe
 ```
 
 This sends a special `/shutdown` request that triggers graceful shutdown. The server will:
@@ -506,8 +598,9 @@ bro.get("/bRequest", [](Request &request, Response &response) {
     // Receive the score from the previous handler
     int receivedScore;
     request.get("score", &receivedScore, NULL, NULL);
-    
+
     cout << "Got score: " << receivedScore << endl;
+    response.setContentType("text/html");
     response << "<h1>Your score: " << receivedScore << "</h1>";
 });
 ```
