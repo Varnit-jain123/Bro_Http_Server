@@ -121,11 +121,23 @@ int main()
         });
 
         bro.post("/save_test2_data", [](Request &request, Response &response) {
+            string nm = request["nm"];
+            string ct = request["ct"];
+            string gender = request["gender"];
+
             cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
-            cout<<request.getCookieValue("RollNumber")<<endl;
-            cout<<request.getCookieValue("Name")<<endl;
-            cout<<request.getCookieValue("City")<<endl;
+            cout<<"Form Data Received:"<<endl;
+            cout<<"Name: "<<nm<<endl;
+            cout<<"City Code: "<<ct<<endl;
+            cout<<"Gender: "<<gender<<endl;
             cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
+
+            Cookie c1("Name", nm);
+            Cookie c2("CityCode", ct);
+            Cookie c3("Gender", gender);
+            response.addCookie(c1);
+            response.addCookie(c2);
+            response.addCookie(c3);
             const char *html = R""""(
             <!DOCTYPE html>
             <html>
