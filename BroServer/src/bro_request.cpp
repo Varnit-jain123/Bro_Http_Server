@@ -4,7 +4,7 @@ Request::Request(char *method,const char *requestURI,char *httpVersion,char *dat
     this->method=method;
     this->requestURI=requestURI;
     this->httpVersion=httpVersion;
-    if(dataInRequest!=NULL && strcmp(this->method,"get")==0)
+    if(dataInRequest!=NULL && (strcmp(this->method,"get")==0 || strcmp(this->method,"post")==0))
     {
         createDataMap(dataInRequest,dataMap);
     }

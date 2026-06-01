@@ -166,6 +166,14 @@ void request_processor(int clientSocketDiscriptor,Bro *bro,BroThreadWrapperNode 
     // code to parse the header and then the payload if exists start here
     map<string,string> headerFieldsMap;
     HeaderUtility::parseHeader(requestBuffer+headerStartIndex,headerFieldsMap);
+    if(strcmp(method,"post")==0)
+    {
+        char *payloadStart = strstr(requestBuffer+headerStartIndex, "\r\n\r\n");
+        if(payloadStart != NULL)
+        {
+            dataInRequest = payloadStart + 4;
+        }
+    }
     // code to parse the header and then the payload if exists ends here
     Request request(method,requestURI,httpVersion,dataInRequest,headerFieldsMap);
     while(1)

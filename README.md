@@ -192,9 +192,35 @@ Let's get this thing running! Here's how:
    cd BroServer
    ```
 
-**2. Compile the example application** (this is where the magic happens)
+**2. Rebuild the Framework Library (Required when switching OS)**
+   If you are cloning this repository on a new operating system (e.g., from Linux to Windows or vice versa), you should rebuild the `libbro.a` framework library first to avoid compatibility issues:
    ```bash
+   cd lib
+   
+   # On Linux (clean the directory first, then build)
+   rm -r *
+   cmake ../src
+   cmake --build .
+   
+   # On Windows (MinGW) (clean the directory first, then build)
+   Remove-Item -Recurse -Force *
+   cmake -G "MinGW Makefiles" ../src
+   cmake --build .
+   
+   cd ..
+   ```
+
+**3. Compile the example application** (this is where the magic happens)
+   Navigate to the `bobby` directory to compile your server:
+   ```bash
+   cd bobby
+   
+   # On Linux
    g++ bobby.cpp -o bobby.out -I ../include/ -L ../lib/ -lbro 
+   
+   # On Windows (MinGW)
+   # Note: Windows requires linking the Socket API (-lws2_32) and static standard libraries (-static)
+   g++ bobby.cpp -o bobby.exe -I ../include/ -L ../lib/ -lbro -lws2_32 -static
    ```
 
 That's it! You've just built a web server from scratch.
@@ -205,7 +231,11 @@ Time to see it in action:
 
 **1. Fire it up**
    ```bash
+   # On Linux
    ./bobby.out
+   
+   # On Windows
+   .\bobby.exe
    ```
 
 **2. You should see something like this:**
