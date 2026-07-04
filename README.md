@@ -113,62 +113,36 @@ Here's what makes this framework valuable for education:
 ## Project Structure
 
 
-```
-Bro/                            # Root project directory
-├── BroServer/                  # Main server implementation
-│   ├── bobby/                  # Example application
-│   │   ├── bro-data/           # Framework data files
-│   │   │   └── mime.types      # MIME type mappings
-│   │   ├── data/               # Application data
-│   │   │   └── sofd.data       # Sample data file
-│   │   ├── vtml_files/         # Template files
-│   │   │   └── WordsOfWisdom.chtml
-│   │   ├── Whatever/           # Static resources folder
-|   |   |   ├── index.html
-│   │   |   ├── somethingCool.html
-|   |   |   ├── test1.html
-|   |   |   ├── test2.html 
-│   │   ├── bobby.out           # Compiled server executable
-|   |   ├── bobby.cpp 
+```text
+Bro_Http_Server/                # Root project directory
+├── CMakeLists.txt              # Main CMake build configuration
+├── README.md                   # This file
+├── docs/                       # Learning materials and guides
+│   └── Learn/
+├── include/                    # Public headers
+│   └── bro/                    # Framework headers (e.g. bro.h, bro_request.h)
+├── src/                        # Core framework implementation
+│   ├── CMakeLists.txt          # Builds the 'bro' static library
+│   ├── bro.cpp
+│   └── [other .cpp files]
+├── examples/                   # Example applications
+│   ├── bobby/                  # Basic server example
+│   │   ├── CMakeLists.txt
+│   │   ├── bobby.cpp
+│   │   ├── bro-data/           # MIME types
+│   │   ├── data/
+│   │   ├── vmd_files/
+│   │   └── Whatever/           # Static resources
 │   │
-│   ├── include/                # Header files
-│   │   ├── bro_application_level_Container_Dependent_Function.h
-│   │   ├── bro_application_level_Container_Dependent_Startup_Function.h
-│   │   ├── bro_application_level_container.h
-│   │   ├── bro_constants.h
-│   │   ├── bro_cookies.h
-│   │   ├── bro_error.h
-│   │   ├── bro_file_system_utility.h
-│   │   ├── bro_function.h
-│   │   ├── bro.h               # Main framework header
-│   │   ├── bro_html_date_time.h
-│   │   ├── bro_header_utility.h
-│   │   ├── bro_http_error_status_utility.h
-│   │   ├── bro_http_response_utility.h
-│   │   ├── bro_request.h
-│   │   ├── bro_response.h
-│   │   ├── bro_simple_function.h
-│   │   ├── bro_simple_startup_function.h
-│   │   ├── bro_startup_function_comparator.h
-│   │   ├── bro_startup_function.h
-│   │   ├── bro_string_utility.h
-│   │   ├── bro_stringifyable.h
-│   │   ├── bro_template_engine.h
-│   │   ├── bro_thread_wrapper_node.h
-│   │   ├── bro_utilities.h
-│   │   └── bro_validator.h
-│   │
-│   ├── lib/                    # Compiled library
-│   │   └── libbro.a           # Static library (generated)
-│   │
-│   └── src/                    # Source files
-│       ├── bro.cpp            # Core framework implementation
-│       ├── shutdown_script    # Shutdown utility script
-|       ├── CMakeLists.txt     # CMake build configuration
-│       └── [other .cpp files] # Framework implementation files
-│
-├── Learn/                      # Learning materials/
-└── README.md                   # This file
+│   └── varnit/                 # Advanced EduBase example (MySQL required)
+│       ├── CMakeLists.txt
+│       ├── varnit.cpp
+│       ├── db_setup.sql
+│       └── static/
+├── tests/                      # Unit tests and extra examples
+└── scripts/                    # Utility scripts
+    └── shutdown/
+        └── shutdown_bro.cpp
 ```
 
 ## Getting Started
@@ -184,46 +158,25 @@ Before diving in, make sure you have:
 
 ### Building the Server
 
-Let's get this thing running! Here's how:
+Let's get this thing running! We use **CMake** to make building incredibly simple across all operating systems.
 
 **1. Grab the code**
    ```bash
    git clone https://github.com/Varnit-jain123/Bro_Http_Server.git
-   cd BroServer
+   cd Bro_Http_Server
    ```
 
-**2. Rebuild the Framework Library (Required when switching OS)**
-   If you are cloning this repository on a new operating system (e.g., from Linux to Windows or vice versa), you should rebuild the `libbro.a` framework library first to avoid compatibility issues:
+**2. Build everything**
+   Using CMake, you can build the framework and the example applications in just two commands:
    ```bash
-   cd lib
-   
-   # On Linux (clean the directory first, then build)
-   rm -r *
-   cmake ../src
-   cmake --build .
-   
-   # On Windows (MinGW) (clean the directory first, then build)
-   Remove-Item -Recurse -Force *
-   cmake -G "MinGW Makefiles" ../src
-   cmake --build .
-   
-   cd ..
+   # Configure the project (creates the 'build' directory)
+   cmake -B build
+
+   # Compile the project
+   cmake --build build
    ```
 
-**3. Compile the example application** (this is where the magic happens)
-   Navigate to the `bobby` directory to compile your server:
-   ```bash
-   cd bobby
-   
-   # On Linux
-   g++ bobby.cpp -o bobby.out -I ../include/ -L ../lib/ -lbro 
-   
-   # On Windows (MinGW)
-   # Note: Windows requires linking the Socket API (-lws2_32) and static standard libraries (-static)
-   g++ bobby.cpp -o bobby.exe -I ../include/ -L ../lib/ -lbro -lws2_32 -static
-   ```
-
-That's it! You've just built a web server from scratch.
+That's it! CMake automatically handles compiling the `bro` framework library and linking it to the `bobby` example. You'll find your compiled executables inside the `build/` folder.
 
 ---
 
@@ -231,13 +184,8 @@ That's it! You've just built a web server from scratch.
 
 Already have the library built? Here's how to write and run your **own** application using BroServer in just 3 steps:
 
-**Step 1: Create your project folder inside `BroServer/`**
-   ```bash
-   mkdir BroServer/myapp
-   cd BroServer/myapp
-   ```
-
-**Step 2: Write your app (e.g. `myapp.cpp`)**
+**Step 1: Write your app (e.g. `myapp.cpp`)**
+Create a new file in a project folder:
    ```cpp
    #include <bro.h>
 
@@ -264,16 +212,20 @@ Already have the library built? Here's how to write and run your **own** applica
    }
    ```
 
-**Step 3: Compile and run**
-   ```bash
-   # On Linux
-   g++ myapp.cpp -o myapp.out -I ../include/ -L ../lib/ -lbro
-   ./myapp.out
+**Step 2: Create a `CMakeLists.txt` for your app**
+   ```cmake
+   cmake_minimum_required(VERSION 3.18)
+   project(MyApp)
 
-   # On Windows (MinGW)
-   g++ myapp.cpp -o myapp.exe -I ../include/ -L ../lib/ -lbro -lws2_32 -static
-   .\myapp.exe
+   add_executable(myapp myapp.cpp)
+
+   # Link against the Bro HTTP Server framework
+   # (assuming you added your app as a subdirectory in the root CMakeLists.txt)
+   target_link_libraries(myapp PRIVATE bro)
    ```
+
+**Step 3: Compile and run**
+Run `cmake -B build` and `cmake --build build` from the root, and execute your compiled application!
 
    Then open your browser and visit: `http://localhost:6060/hello`
 
@@ -290,28 +242,29 @@ The repository also includes `varnit`, a fully featured Student & Faculty Manage
 - **Dynamic CHTML Pages**: Live server rendering with injected variables (e.g. `/report`).
 - **Global Application State**: Using `ApplicationLevelContainer` to track total server visits across all users.
 
-To run the EduBase example (Windows):
+To run the EduBase example:
 1. Ensure MySQL Server 8.0 is installed and your database is configured.
-2. Navigate to the `varnit` directory and compile:
-   ```bash
-   cd varnit
-   g++ varnit.cpp -o varnit.exe -I ../include/ -L ../lib/ -lbro -lws2_32 -L "C:/Program Files/MySQL/MySQL Server 8.0/lib" -lmysql -I "C:/Program Files/MySQL/MySQL Server 8.0/include" -static-libgcc -static-libstdc++
-   ```
-3. Run the server (`.\varnit.exe`) and visit `http://localhost:6060/index.html`.
+2. Run `mysql -u root -p < examples/varnit/db_setup.sql` to initialize the database.
+3. Open the root `CMakeLists.txt` and uncomment `add_subdirectory(examples/varnit)`.
+4. Run `cmake -B build` and `cmake --build build`.
+5. Run the server: `cd examples/varnit` then run `..\..\build\examples\varnit\varnit.exe`
+6. Visit `http://localhost:6060/index.html`.
 
 ---
 
 ### Running Your Server
 
-Time to see it in action:
+Time to see it in action! **It's important to run the example from its own directory** so it can find its static resource folders (like `Whatever` or `bro-data`).
 
 **1. Fire it up**
    ```bash
-   # On Linux
-   ./bobby.out
+   cd examples/bobby
+   
+   # On Linux/Mac
+   ../../build/examples/bobby/bobby
    
    # On Windows
-   .\bobby.exe
+   ..\..\build\examples\bobby\bobby.exe
    ```
 
 **2. You should see something like this:**
@@ -348,10 +301,10 @@ You have two ways to gracefully shut down the server:
 
 **Option 1: Using the Shutdown Utility (Recommended)**
 
-The server comes with a dedicated shutdown utility located in `BroServer/shutdown_script/`. You need to compile it once first:
+The server comes with a dedicated shutdown utility located in `scripts/shutdown/`. You can compile it easily:
 
 ```bash
-cd shutdown_script
+cd scripts/shutdown
 
 # On Linux
 g++ shutdown_bro.cpp -o shutdown_bro.out
@@ -683,7 +636,7 @@ This project is a living learning tool. Here's what we're thinking about adding:
 
 **Performance & Scalability:**
 - [ ] Real thread pool (instead of spawning threads for each request)
-- [ ] HTTP/2 support with multiplexing
+- [ ] HTTP support with multiplexing
 - [ ] Connection pooling and keep-alive improvements
 
 **Security:**
@@ -771,33 +724,6 @@ Open an issue and ask! We're happy to help you find something that matches your 
 
 Remember: This is a learning project. "Beginner-friendly" contributions are just as valuable as advanced ones. We all started somewhere!
 
-## License
-
-This project is released under an **Educational License**. 
-
-**What that means:**
-- ✅ Use it for learning (obviously!)
-- ✅ Use it for school projects and homework
-- ✅ Use it for personal experiments
-- ✅ Fork it, modify it, learn from it
-- ✅ Use it in non-commercial projects
-
-**What you need permission for:**
-- ❌ Selling it or making money from it
-- ❌ Using it in commercial products
-- ❌ Distributing it as part of paid software
-
-Want to use it commercially? Just reach out and let's talk!
-
-```
-Educational Use License
-
-Permission is granted to use this software for educational, research, 
-and personal learning purposes free of charge.
-
-Commercial use requires explicit written permission from the copyright holders.
-```
-
 ## Need Help?
 
 Stuck? Confused? Found a bug?
@@ -812,8 +738,6 @@ Don't be shy! We're here to help you learn.
 <div align="center">
 
 **Bro HTTP Server — designed and engineered by Varnit Jain for those who dare to build from scratch.**
-
-*Because understanding how things work is always better than just using them*
 
 [⬆ Back to top](#bro-http-server)
 

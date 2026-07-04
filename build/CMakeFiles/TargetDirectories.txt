@@ -1,0 +1,11 @@
+C:/programming/c++/Bro_http_server/Bro_Http_Server/build/CMakeFiles/edit_cache.dir
+C:/programming/c++/Bro_http_server/Bro_Http_Server/build/CMakeFiles/rebuild_cache.dir
+C:/programming/c++/Bro_http_server/Bro_Http_Server/build/src/CMakeFiles/bro.dir
+C:/programming/c++/Bro_http_server/Bro_Http_Server/build/src/CMakeFiles/edit_cache.dir
+C:/programming/c++/Bro_http_server/Bro_Http_Server/build/src/CMakeFiles/rebuild_cache.dir
+C:/programming/c++/Bro_http_server/Bro_Http_Server/build/examples/bobby/CMakeFiles/bobby.dir
+C:/programming/c++/Bro_http_server/Bro_Http_Server/build/examples/bobby/CMakeFiles/edit_cache.dir
+C:/programming/c++/Bro_http_server/Bro_Http_Server/build/examples/bobby/CMakeFiles/rebuild_cache.dir
+C:/programming/c++/Bro_http_server/Bro_Http_Server/build/examples/varnit/CMakeFiles/varnit.dir
+C:/programming/c++/Bro_http_server/Bro_Http_Server/build/examples/varnit/CMakeFiles/edit_cache.dir
+C:/programming/c++/Bro_http_server/Bro_Http_Server/build/examples/varnit/CMakeFiles/rebuild_cache.dir

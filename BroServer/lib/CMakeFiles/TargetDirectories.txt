@@ -1,3 +1,0 @@
-C:/programming/c++/Bro_http_server/Bro_Http_Server/BroServer/lib/CMakeFiles/bro.dir
-C:/programming/c++/Bro_http_server/Bro_Http_Server/BroServer/lib/CMakeFiles/edit_cache.dir
-C:/programming/c++/Bro_http_server/Bro_Http_Server/BroServer/lib/CMakeFiles/rebuild_cache.dir
